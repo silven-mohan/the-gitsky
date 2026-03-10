@@ -4,6 +4,38 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const STAR_COUNT = 6500;
 
+function createNebulaTexture(colorA: string, colorB: string) {
+  const size = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+
+  const context = canvas.getContext('2d');
+  if (!context) {
+    return new THREE.CanvasTexture(canvas);
+  }
+
+  const gradient = context.createRadialGradient(
+    size * 0.5,
+    size * 0.5,
+    size * 0.1,
+    size * 0.5,
+    size * 0.5,
+    size * 0.5
+  );
+  gradient.addColorStop(0, colorA);
+  gradient.addColorStop(0.45, colorB);
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, size, size);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
+
 function App() {
   const canvasWrapRef = useRef<HTMLDivElement | null>(null);
 
@@ -33,14 +65,13 @@ function App() {
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enablePan = false;
-    controls.enableZoom = true;
-    controls.zoomSpeed = 0.4;
-    controls.rotateSpeed = 0.35;
-    controls.minDistance = 0.01;
-    controls.maxDistance = 0.01;
-    controls.minPolarAngle = 0.2;
-    controls.maxPolarAngle = Math.PI / 2.02;
-    controls.target.set(0, 16, -20);
+    controls.enableZoom = false;
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.rotateSpeed = 0.45;
+    controls.minPolarAngle = 0.05;
+    controls.maxPolarAngle = Math.PI - 0.05;
+    controls.target.set(0, 2.2, -20);
     controls.update();
 
     const moonLight = new THREE.PointLight(0xa8c7ff, 1.1, 500);
@@ -151,11 +182,39 @@ function App() {
     starBand.rotation.y = 0.28;
     scene.add(starBand);
 
-    const mouse = new THREE.Vector2();
-    const onPointerMove = (event: PointerEvent) => {
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = (event.clientY / window.innerHeight) * 2 - 1;
-    };
+    const nebulaTexturePink = createNebulaTexture('rgba(255, 148, 232, 0.2)', 'rgba(195, 114, 255, 0.11)');
+    const nebulaTexturePurple = createNebulaTexture('rgba(198, 150, 255, 0.22)', 'rgba(133, 109, 255, 0.1)');
+    const nebulaMaterialPink = new THREE.SpriteMaterial({
+      map: nebulaTexturePink,
+      transparent: true,
+      opacity: 0.18,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    const nebulaMaterialPurple = new THREE.SpriteMaterial({
+      map: nebulaTexturePurple,
+      transparent: true,
+      opacity: 0.16,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+
+    const nebulaSprites: { material: { opacity: number } }[] = [];
+    const nebulaConfigs = [
+      { x: -140, y: 120, z: -280, scale: 250, material: nebulaMaterialPink },
+      { x: 120, y: 150, z: -220, scale: 220, material: nebulaMaterialPurple },
+      { x: 220, y: 95, z: 90, scale: 180, material: nebulaMaterialPink },
+      { x: -210, y: 110, z: 160, scale: 200, material: nebulaMaterialPurple }
+    ] as const;
+
+    nebulaConfigs.forEach((config) => {
+      const sprite = new THREE.Sprite(config.material);
+      sprite.position.set(config.x, config.y, config.z);
+      sprite.scale.set(config.scale, config.scale * 0.7, 1);
+      sprite.material.rotation = Math.random() * Math.PI;
+      nebulaSprites.push(sprite);
+      scene.add(sprite);
+    });
 
     const onResize = () => {
       if (!canvasWrapRef.current) {
@@ -168,7 +227,6 @@ function App() {
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     };
 
-    window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('resize', onResize);
 
     let frameId = 0;
@@ -180,12 +238,13 @@ function App() {
 
       stars.rotation.y = t * 0.005;
       starBand.rotation.y = 0.28 + t * 0.002;
+      nebulaSprites[0].material.opacity = 0.15 + Math.sin(t * 0.22) * 0.02;
+      nebulaSprites[1].material.opacity = 0.14 + Math.sin(t * 0.18 + 0.5) * 0.02;
+      nebulaSprites[2].material.opacity = 0.13 + Math.sin(t * 0.2 + 0.8) * 0.015;
+      nebulaSprites[3].material.opacity = 0.12 + Math.sin(t * 0.26 + 1.3) * 0.02;
 
       starsMaterial.opacity = 0.86 + Math.sin(t * 0.7) * 0.05;
       bandMaterial.opacity = 0.32 + Math.sin(t * 0.5 + 0.7) * 0.04;
-
-      camera.position.x += (mouse.x * 1.4 - camera.position.x) * 0.02;
-      camera.position.y += (2.2 + mouse.y * 0.8 - camera.position.y) * 0.02;
 
       controls.update();
       renderer.render(scene, camera);
@@ -195,7 +254,6 @@ function App() {
 
     return () => {
       cancelAnimationFrame(frameId);
-      window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('resize', onResize);
 
       controls.dispose();
@@ -203,16 +261,20 @@ function App() {
       bandGeometry.dispose();
       starsMaterial.dispose();
       bandMaterial.dispose();
+      nebulaTexturePink.dispose();
+      nebulaTexturePurple.dispose();
+      nebulaMaterialPink.dispose();
+      nebulaMaterialPurple.dispose();
       renderer.dispose();
 
-      scene.traverse((child) => {
-        const mesh = child as THREE.Mesh;
+      scene.traverse((child: { geometry?: { dispose: () => void }; material?: { dispose: () => void } | Array<{ dispose: () => void }> }) => {
+        const mesh = child;
         if (mesh.geometry) {
           mesh.geometry.dispose();
         }
 
         if (Array.isArray(mesh.material)) {
-          mesh.material.forEach((material) => material.dispose());
+          mesh.material.forEach((material: { dispose: () => void }) => material.dispose());
         } else if (mesh.material) {
           mesh.material.dispose();
         }

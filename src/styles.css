@@ -37,11 +37,9 @@ body,
   top: 1.5rem;
   left: 1.5rem;
   max-width: 420px;
-  padding: 0.95rem 1.1rem;
-  border-radius: 0.7rem;
-  background: linear-gradient(to bottom right, rgb(8 15 34 / 72%), rgb(18 40 84 / 45%));
-  border: 1px solid rgb(159 186 255 / 25%);
-  backdrop-filter: blur(3px);
+  padding: 0;
+  background: transparent;
+  border: 0;
 }
 
 .overlay h1 {
@@ -55,6 +53,7 @@ body,
   color: #c9daff;
   line-height: 1.45;
   font-size: 0.95rem;
+  text-shadow: 0 0 14px rgb(34 60 121 / 45%);
 }
 
 @media (max-width: 640px) {
