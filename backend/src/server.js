@@ -11,12 +11,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PORT = Number(process.env.PORT || 4000);
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://the-gitsky.vercel.app';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-session-secret';
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || '';
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || '';
-const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL || `http://localhost:${PORT}/auth/github/callback`;
-
+const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL || `http://the-gitsky.vercel.app/auth/github/callback`;
 const DATA_DIR = path.resolve(__dirname, '../data');
 const LATEST_FILE = path.resolve(DATA_DIR, 'latest-stars.json');
 const HISTORY_FILE = path.resolve(DATA_DIR, 'star-history.json');
@@ -310,5 +309,5 @@ app.post('/auth/logout', (req, res) => {
 await ensureDataFiles();
 
 app.listen(PORT, () => {
-  console.log(`Backend listening on http://localhost:${PORT}`);
+  console.log(`Backend listening on http://the-gitsky.vercel.app/auth/github/callback`);
 });
