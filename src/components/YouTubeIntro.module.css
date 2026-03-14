@@ -1,0 +1,38 @@
+.root {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+  transform: scale(1);
+  transform-origin: center center;
+  opacity: 1;
+  transition: transform 1.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.zoomExit {
+  transform: scale(15);
+  opacity: 0;
+}
+
+.videoViewport {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.videoFrame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 115%;
+  height: 115%;
+  border: 0;
+  transform: translate(-50%, -50%);
+}
+
+.pointer-events-none {
+  pointer-events: none;
+}

@@ -2,6 +2,10 @@
 
 Interactive main-page night sky built with ThreeJS on a modern Vite + React + TypeScript stack.
 
+## Project structure
+
+See the full tree and structure notes in [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md).
+
 ## Quick start
 
 1. Install Node.js 20+.
@@ -19,9 +23,10 @@ Interactive main-page night sky built with ThreeJS on a modern Vite + React + Ty
 
 4. Open the local URL shown in the terminal.
 
+## Refactor notes
+
+- Runtime/static media assets are centralized in `public/media`.
+- Source-only raw video remains in `src/media`.
+
 ## Credits
 
-- 3D tree model source: Sketchfab (https://sketchfab.com)
-- Model used in project: `src/media/models/pine_tree.glb`
-
-If you have the exact model page URL and author name, add them here for full attribution.

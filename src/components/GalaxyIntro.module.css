@@ -1,0 +1,45 @@
+.root {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+.getStartedButton {
+  position: absolute;
+  bottom: 2.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 1px solid rgb(148 201 255 / 48%);
+  background: linear-gradient(180deg, rgb(21 43 89 / 86%), rgb(7 19 43 / 86%));
+  color: #e9f3ff;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.85rem 1.6rem;
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 30px rgb(81 156 255 / 26%);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.getStartedButton:hover {
+  transform: translateX(-50%) translateY(-1px);
+  border-color: rgb(175 220 255 / 74%);
+  box-shadow: 0 0 34px rgb(94 178 255 / 38%);
+}
+
+.getStartedButton:active {
+  transform: translateX(-50%) translateY(0);
+}
