@@ -8,19 +8,30 @@ type MeResponse = {
   updatedAt?: string;
 };
 
-const BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:4000';
+const envBackendUrl = (import.meta as any).env?.VITE_BACKEND_URL as string | undefined;
+const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const BACKEND_URL = envBackendUrl || (isLocalHost ? 'http://localhost:4000' : '');
 
 function LoginPage() {
   const [me, setMe] = useState<MeResponse>({ authenticated: false });
   const [error, setError] = useState<string | null>(null);
+  const isBackendConfigured = Boolean(BACKEND_URL);
 
   const authorizeUrl = useMemo(() => {
+    if (!BACKEND_URL) {
+      return '#';
+    }
     const returnTo = `${window.location.origin}/login`;
     return `${BACKEND_URL}/auth/github?returnTo=${encodeURIComponent(returnTo)}`;
   }, []);
 
   useEffect(() => {
     let timer: number | undefined;
+
+    if (!BACKEND_URL) {
+      setError('Missing VITE_BACKEND_URL. Set it in Vercel project environment variables.');
+      return;
+    }
 
     const load = async () => {
       try {
@@ -59,7 +70,16 @@ function LoginPage() {
         </p>
 
         <div className={styles.actions}>
-          <button type="button" onClick={() => { window.location.href = authorizeUrl; }}>
+          <button
+            type="button"
+            disabled={!isBackendConfigured}
+            onClick={() => {
+              if (!isBackendConfigured) {
+                return;
+              }
+              window.location.href = authorizeUrl;
+            }}
+          >
             Authorize with GitHub
           </button>
           <button type="button" onClick={() => { window.location.href = '/world'; }}>
