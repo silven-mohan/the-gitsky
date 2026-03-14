@@ -5,6 +5,3 @@ backend/node_modules/
 
 # Build outputs
 frontend/dist/
-
-# Environment files
-backend/.env
