@@ -271,14 +271,14 @@ function App() {
         <h2>The GitSky</h2>
         <div className="world-card__actions">
           <button type="button" onClick={() => { window.location.href = '/login'; }}>
-            Login/Create
+            🔐 Login/Create
           </button>
           <button
             className="world-card__orbit"
             type="button"
             onClick={() => setIsCardOpen(false)}
           >
-            Orbit 🚀
+            🚀 Orbit
           </button>
         </div>
       </section>
