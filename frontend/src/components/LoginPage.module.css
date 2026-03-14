@@ -1,0 +1,61 @@
+.login-page {
+  min-height: 100vh;
+  width: 100vw;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 20% 10%, #122b55 0%, #07152e 40%, #030910 100%);
+  color: #dce8ff;
+  padding: 1rem;
+}
+
+.login-card {
+  width: min(680px, calc(100vw - 2rem));
+  border: 1px solid rgb(145 197 255 / 30%);
+  border-radius: 16px;
+  background: rgb(4 16 36 / 80%);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 18px 44px rgb(0 0 0 / 50%), 0 0 26px rgb(79 143 255 / 24%);
+  padding: 1.1rem;
+}
+
+.login-card h1 {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.5vw, 1.7rem);
+}
+
+.login-card p {
+  margin: 0.55rem 0 0;
+  color: #b8d4ff;
+  line-height: 1.45;
+}
+
+.actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.6rem;
+}
+
+.actions button {
+  border: 1px solid rgb(170 219 255 / 40%);
+  border-radius: 999px;
+  background: rgb(10 32 67 / 88%);
+  color: #ecf5ff;
+  padding: 0.62rem 1rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 180ms ease, border-color 180ms ease;
+}
+
+.actions button:hover {
+  background: rgb(15 45 91 / 94%);
+  border-color: rgb(195 233 255 / 70%);
+}
+
+.status {
+  margin-top: 1rem;
+  border-top: 1px solid rgb(124 176 230 / 22%);
+  padding-top: 0.8rem;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+}

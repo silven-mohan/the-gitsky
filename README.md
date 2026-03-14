@@ -9,24 +9,35 @@ See the full tree and structure notes in [PROJECT_STRUCTURE.md](PROJECT_STRUCTUR
 ## Quick start
 
 1. Install Node.js 20+.
-2. Install dependencies:
+2. Install frontend dependencies:
 
 	```bash
+	cd frontend
 	npm install
 	```
 
-3. Start the dev server:
+3. Start the frontend dev server:
 
 	```bash
+	cd frontend
 	npm run dev
 	```
 
-4. Open the local URL shown in the terminal.
+4. In another terminal, install and run the backend:
+
+	```bash
+	cd backend
+	npm install
+	npm run dev
+	```
+
+5. Open the frontend local URL shown in the terminal.
 
 ## Refactor notes
 
 - Route flow is now split into three pages: `/` (galaxy), `/video` (intro video), and `/world` (Three.js scene).
 - Three.js world overlay text has been removed and camera zoom-in is clamped.
+- Repository layout is now split by runtime: frontend code under `frontend/` and API/auth service under `backend/`.
 
 ## Credits
 
