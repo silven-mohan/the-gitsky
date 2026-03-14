@@ -17,7 +17,7 @@ Express backend for GitHub OAuth and Supabase persistence.
 - `GITHUB_CLIENT_SECRET`
 - `GITHUB_CALLBACK_URL`
 - `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
 
 ## Setup
 
