@@ -1,24 +1,25 @@
 import 'dotenv/config';
+import { createClient } from '@supabase/supabase-js';
 import cors from 'cors';
 import crypto from 'crypto';
 import express from 'express';
 import session from 'express-session';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const PORT = Number(process.env.PORT || 4000);
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://the-gitsky.vercel.app';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-session-secret';
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || '';
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || '';
-const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL || `http://the-gitsky.vercel.app/auth/github/callback`;
-const DATA_DIR = path.resolve(__dirname, '../data');
-const LATEST_FILE = path.resolve(DATA_DIR, 'latest-stars.json');
-const HISTORY_FILE = path.resolve(DATA_DIR, 'star-history.json');
+const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL || 'http://localhost:4000/auth/github/callback';
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error('Missing SUPABASE_URL or SUPABASE_ANON_KEY in .env');
+  process.exit(1);
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const pollers = new Map();
 
@@ -44,35 +45,6 @@ app.use(
     }
   })
 );
-
-const ensureDataFiles = async () => {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-
-  try {
-    await fs.access(LATEST_FILE);
-  } catch {
-    await fs.writeFile(LATEST_FILE, '{}\n', 'utf8');
-  }
-
-  try {
-    await fs.access(HISTORY_FILE);
-  } catch {
-    await fs.writeFile(HISTORY_FILE, '[]\n', 'utf8');
-  }
-};
-
-const readJson = async (filePath, fallbackValue) => {
-  try {
-    const raw = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(raw);
-  } catch {
-    return fallbackValue;
-  }
-};
-
-const writeJson = async (filePath, value) => {
-  await fs.writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
-};
 
 const fetchGitHubToken = async (code) => {
   const response = await fetch('https://github.com/login/oauth/access_token', {
@@ -159,24 +131,21 @@ const fetchTotalStars = async (token, username) => {
 const storeStarSnapshot = async (username, starCount) => {
   const nowIso = new Date().toISOString();
 
-  const latest = await readJson(LATEST_FILE, {});
-  latest[username] = {
-    username,
-    starCount,
-    updatedAt: nowIso
-  };
+  const { data, error: upsertErr } = await supabase
+    .from('star_snapshots')
+    .upsert({ username, star_count: starCount, updated_at: nowIso }, { onConflict: 'username' })
+    .select()
+    .single();
 
-  const history = await readJson(HISTORY_FILE, []);
-  history.push({
-    username,
-    starCount,
-    timestamp: nowIso
-  });
+  if (upsertErr) throw upsertErr;
 
-  await writeJson(LATEST_FILE, latest);
-  await writeJson(HISTORY_FILE, history);
+  const { error: insertErr } = await supabase
+    .from('star_history')
+    .insert({ username, star_count: starCount, recorded_at: nowIso });
 
-  return latest[username];
+  if (insertErr) throw insertErr;
+
+  return { username, starCount: data.star_count, updatedAt: data.updated_at };
 };
 
 const startPollingUserStars = (username, token) => {
@@ -269,35 +238,45 @@ app.get('/api/me', async (req, res) => {
     return;
   }
 
-  const latest = await readJson(LATEST_FILE, {});
-  const entry = latest[sessionUser.username];
+  const { data: entry } = await supabase
+    .from('star_snapshots')
+    .select('star_count, updated_at')
+    .eq('username', sessionUser.username)
+    .maybeSingle();
 
   res.json({
     authenticated: true,
     username: sessionUser.username,
-    starCount: entry?.starCount,
-    updatedAt: entry?.updatedAt
+    starCount: entry?.star_count,
+    updatedAt: entry?.updated_at
   });
 });
 
 app.get('/api/star-counts/:username/latest', async (req, res) => {
-  const latest = await readJson(LATEST_FILE, {});
-  const username = req.params.username;
-  const entry = latest[username];
+  const { data: entry, error } = await supabase
+    .from('star_snapshots')
+    .select('username, star_count, updated_at')
+    .eq('username', req.params.username)
+    .maybeSingle();
 
-  if (!entry) {
+  if (error || !entry) {
     res.status(404).json({ error: 'No data for this user yet' });
     return;
   }
 
-  res.json(entry);
+  res.json({ username: entry.username, starCount: entry.star_count, updatedAt: entry.updated_at });
 });
 
 app.get('/api/star-counts/:username/history', async (req, res) => {
-  const history = await readJson(HISTORY_FILE, []);
-  const username = req.params.username;
-  const rows = history.filter((row) => row.username === username);
-  res.json(rows);
+  const { data: rows } = await supabase
+    .from('star_history')
+    .select('username, star_count, recorded_at')
+    .eq('username', req.params.username)
+    .order('recorded_at', { ascending: true });
+
+  res.json(
+    (rows ?? []).map((r) => ({ username: r.username, starCount: r.star_count, timestamp: r.recorded_at }))
+  );
 });
 
 app.post('/auth/logout', (req, res) => {
@@ -306,8 +285,6 @@ app.post('/auth/logout', (req, res) => {
   });
 });
 
-await ensureDataFiles();
-
 app.listen(PORT, () => {
-  console.log(`Backend listening on http://the-gitsky.vercel.app/auth/github/callback`);
+  console.log(`Backend listening on http://localhost:${PORT}`);
 });
