@@ -21,8 +21,7 @@ function LoginPage() {
     if (!BACKEND_URL) {
       return '#';
     }
-    const returnTo = `${window.location.origin}/login`;
-    return `${BACKEND_URL}/auth/github?returnTo=${encodeURIComponent(returnTo)}`;
+    return `${BACKEND_URL}/auth/github`;
   }, []);
 
   useEffect(() => {
