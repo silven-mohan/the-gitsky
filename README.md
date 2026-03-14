@@ -25,8 +25,9 @@ See the full tree and structure notes in [PROJECT_STRUCTURE.md](PROJECT_STRUCTUR
 
 ## Refactor notes
 
-- Runtime/static media assets are centralized in `public/media`.
-- Source-only raw video remains in `src/media`.
+- Route flow is now split into three pages: `/` (galaxy), `/video` (intro video), and `/world` (Three.js scene).
+- Three.js world overlay text has been removed and camera zoom-in is clamped.
 
 ## Credits
 
+- Video Credit goes to: NASA's Goddard Space Flight Center/CI Lab

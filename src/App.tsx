@@ -7,6 +7,22 @@ const STAR_COUNT = 18000;
 const SHOOTING_STAR_BURST_INTERVAL = 5;
 const SHOOTING_STARS_PER_BURST = 4;
 const MAX_ACTIVE_SHOOTING_STARS = 14;
+const MIN_CAMERA_DISTANCE = 18;
+const MAX_CAMERA_DISTANCE = 260;
+
+type ShootingStar = {
+  line: {
+    geometry: { dispose: () => void };
+    material: { opacity: number; dispose: () => void };
+    position: { copy: (value: unknown) => void; set: (x: number, y: number, z: number) => void };
+    quaternion: { setFromUnitVectors: (a: unknown, b: unknown) => void };
+  };
+  start: { x: number; y: number; z: number };
+  direction: { x: number; y: number; z: number };
+  speed: number;
+  life: number;
+  age: number;
+};
 
 function App() {
   const canvasWrapRef = useRef<HTMLDivElement | null>(null);
@@ -38,6 +54,8 @@ function App() {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enablePan = false;
     controls.enableZoom = true;
+    controls.minDistance = MIN_CAMERA_DISTANCE;
+    controls.maxDistance = MAX_CAMERA_DISTANCE;
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.rotateSpeed = 0.38;
@@ -90,15 +108,7 @@ function App() {
     const stars = new THREE.Points(starGeometry, starsMaterial);
     scene.add(stars);
 
-    const shootingStars: Array<{
-      line: { geometry: { dispose: () => void }; material: { opacity: number; dispose: () => void }; position: { copy: (value: unknown) => void; set: (x: number, y: number, z: number) => void }; quaternion: { setFromUnitVectors: (a: unknown, b: unknown) => void } };
-      start: { x: number; y: number; z: number };
-      direction: { x: number; y: number; z: number };
-      speed: number;
-      life: number;
-      age: number;
-      tail: number;
-    }> = [];
+    const shootingStars: ShootingStar[] = [];
 
     const upVector = new THREE.Vector3(0, 1, 0);
     let nextShootingStarTime = SHOOTING_STAR_BURST_INTERVAL;
@@ -140,8 +150,7 @@ function App() {
         direction,
         speed: THREE.MathUtils.randFloat(120, 180),
         life: THREE.MathUtils.randFloat(0.55, 1.05),
-        age: 0,
-        tail
+        age: 0
       });
     };
 
@@ -192,7 +201,7 @@ function App() {
         star.line.material.opacity = Math.max(0, 0.9 * (1 - progress * 1.15));
 
         if (progress >= 1) {
-          scene.remove(star.line as never);
+          scene.remove(star.line);
           star.line.geometry.dispose();
           star.line.material.dispose();
           shootingStars.splice(index, 1);
@@ -210,7 +219,7 @@ function App() {
       window.removeEventListener('resize', onResize);
 
       shootingStars.forEach((star) => {
-        scene.remove(star.line as never);
+        scene.remove(star.line);
         star.line.geometry.dispose();
         star.line.material.dispose();
       });
@@ -233,17 +242,15 @@ function App() {
         }
       });
 
-      mount.removeChild(renderer.domElement);
+      if (mount.contains(renderer.domElement)) {
+        mount.removeChild(renderer.domElement);
+      }
     };
   }, []);
 
   return (
     <main className="page">
       <div className="canvas-wrap is-visible" ref={canvasWrapRef} />
-      <div className="overlay">
-        <h1>Blue Space</h1>
-        <p>Orbit in real-time in the Three.js space world.</p>
-      </div>
     </main>
   );
 }

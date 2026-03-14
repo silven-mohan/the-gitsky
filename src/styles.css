@@ -38,38 +38,3 @@ body,
 .canvas-wrap canvas {
   display: block;
 }
-
-.overlay {
-  position: absolute;
-  top: 1.5rem;
-  left: 1.5rem;
-  max-width: 620px;
-  padding: 1rem;
-  background: rgb(4 16 38 / 54%);
-  border: 1px solid rgb(132 184 255 / 22%);
-  border-radius: 12px;
-  backdrop-filter: blur(4px);
-}
-
-.overlay h1 {
-  margin: 0;
-  font-size: clamp(1.05rem, 2.2vw, 1.45rem);
-  letter-spacing: 0.03em;
-}
-
-.overlay p {
-  margin: 0.45rem 0 0;
-  color: #c9daff;
-  line-height: 1.45;
-  font-size: 0.95rem;
-  text-shadow: 0 0 14px rgb(34 60 121 / 45%);
-}
-
-@media (max-width: 640px) {
-  .overlay {
-    top: 1rem;
-    left: 1rem;
-    right: 1rem;
-    max-width: none;
-  }
-}
