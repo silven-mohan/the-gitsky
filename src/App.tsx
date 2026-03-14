@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
@@ -26,6 +26,8 @@ type ShootingStar = {
 
 function App() {
   const canvasWrapRef = useRef<HTMLDivElement | null>(null);
+  const controlsRef = useRef<any>(null);
+  const [isCardOpen, setIsCardOpen] = useState(true);
 
   useEffect(() => {
     const mount = canvasWrapRef.current;
@@ -52,10 +54,12 @@ function App() {
     mount.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
+    controlsRef.current = controls;
     controls.enablePan = false;
-    controls.enableZoom = true;
+    controls.enableZoom = false;
     controls.minDistance = MIN_CAMERA_DISTANCE;
     controls.maxDistance = MAX_CAMERA_DISTANCE;
+    controls.enabled = false;
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.rotateSpeed = 0.38;
@@ -225,6 +229,7 @@ function App() {
       });
 
       controls.dispose();
+      controlsRef.current = null;
       starGeometry.dispose();
       starsMaterial.dispose();
       renderer.dispose();
@@ -248,9 +253,41 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) {
+      return;
+    }
+
+    const isOrbitEnabled = !isCardOpen;
+    controls.enabled = isOrbitEnabled;
+    controls.enableZoom = isOrbitEnabled;
+  }, [isCardOpen]);
+
   return (
     <main className="page">
       <div className="canvas-wrap is-visible" ref={canvasWrapRef} />
+      <section className={`world-card ${!isCardOpen ? 'world-card--hidden' : ''}`}>
+        <h2>The GitSky</h2>
+        <div className="world-card__actions">
+          <button type="button">Login/Create</button>
+          <button
+            className="world-card__orbit"
+            type="button"
+            onClick={() => setIsCardOpen(false)}
+          >
+            Orbit 🚀
+          </button>
+        </div>
+      </section>
+      <button
+        className={`world-card-toggle ${!isCardOpen ? 'world-card-toggle--visible' : ''}`}
+        type="button"
+        aria-label="Open controls card"
+        onClick={() => setIsCardOpen(true)}
+      >
+        ˅
+      </button>
     </main>
   );
 }
