@@ -15,7 +15,7 @@ router.get('/me', requireAuth, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('gitusers')
-      .select('username, avatar_url, star_count')
+      .select('username, starcount')
       .eq('username', username)
       .single();
 
@@ -29,7 +29,10 @@ router.get('/me', requireAuth, async (req, res) => {
       return;
     }
 
-    res.json(data);
+    res.json({
+      username: data.username,
+      star_count: data.starcount
+    });
   } catch {
     res.status(500).json({ error: 'Database error' });
   }

@@ -60,15 +60,11 @@ router.get('/github/callback', async (req, res) => {
     const profile = await fetchGitHubProfile(accessToken);
     const githubId = profile.id;
     const username = profile.login;
-    const avatarUrl = profile.avatar_url || null;
     const starcount = await fetchGitHubStarCount({ username, accessToken });
 
     await upsertGitUser({
-      github_id: githubId,
       username,
-      avatar_url: avatarUrl,
-      star_count: starcount,
-      updated_at: new Date().toISOString()
+      starcount
     });
 
     const token = jwt.sign(

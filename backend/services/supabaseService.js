@@ -1,20 +1,11 @@
 import supabase from './supabaseClient.js';
 
-export const upsertGitUser = async ({ github_id, username, avatar_url, star_count, updated_at }) => {
+export const upsertGitUser = async ({ username, starcount }) => {
   try {
     const { data, error } = await supabase
       .from('gitusers')
-      .upsert(
-        {
-          github_id,
-          username,
-          avatar_url,
-          star_count,
-          updated_at
-        },
-        { onConflict: 'username' }
-      )
-      .select('github_id, username, avatar_url, star_count, updated_at')
+      .upsert({ username, starcount }, { onConflict: 'username' })
+      .select('username, starcount')
       .single();
 
     if (error) {
