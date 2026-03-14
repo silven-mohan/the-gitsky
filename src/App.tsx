@@ -1,6 +1,10 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import pineTreeUrl from './media/models/pine_tree.glb?url';
+import grassUrl from './media/models/grass.glb?url';
 
 const STAR_COUNT = 6500;
 
@@ -78,7 +82,7 @@ function App() {
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x060f22);
-    scene.fog = new THREE.Fog(0x060f22, 180, 520);
+    scene.fog = new THREE.FogExp2(0x0b1a38, 0.0042);
 
     const camera = new THREE.PerspectiveCamera(
       62,
@@ -86,7 +90,7 @@ function App() {
       0.1,
       1200
     );
-    camera.position.set(0, 2.2, 0);
+    camera.position.set(0, 5.2, 8);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(mount.clientWidth, mount.clientHeight);
@@ -102,12 +106,19 @@ function App() {
     controls.rotateSpeed = 0.45;
     controls.minPolarAngle = 0.05;
     controls.maxPolarAngle = Math.PI - 0.05;
-    controls.target.set(0, 2.2, -20);
+    controls.target.set(0, 30, 0);
     controls.update();
 
     const moonLight = new THREE.PointLight(0xa8c7ff, 1.1, 500);
     moonLight.position.set(-60, 95, -140);
     scene.add(moonLight);
+
+    const skyFillLight = new THREE.HemisphereLight(0x5c78a8, 0x0a1a09, 0.32);
+    scene.add(skyFillLight);
+
+    const terrainLight = new THREE.DirectionalLight(0x8ca8d8, 0.22);
+    terrainLight.position.set(45, 70, 35);
+    scene.add(terrainLight);
 
     const moon = new THREE.Mesh(
       new THREE.SphereGeometry(4.6, 32, 32),
@@ -147,13 +158,105 @@ function App() {
     horizonRing.position.y = -1.2;
     scene.add(horizonRing);
 
-    const ground = new THREE.Mesh(
-      new THREE.CircleGeometry(700, 72),
-      new THREE.MeshBasicMaterial({ color: 0x010308 })
+    const terrainBaseY = -4.6;
+    const terrainSize = 720;
+    const terrainDetail = 190;
+    const terrainHeightAt = (x: number, z: number) => {
+      const waveA = Math.sin(x * 0.012) * 5.8;
+      const waveB = Math.cos(z * 0.014) * 5.1;
+      const ridge = Math.sin((x + z) * 0.007) * 3.9;
+      const basin = Math.cos((x - z) * 0.004) * 1.8;
+      const centerRise = Math.max(0, 1 - Math.sqrt(x * x + z * z) / 420) * 4.2;
+      return terrainBaseY + waveA + waveB + ridge + basin + centerRise;
+    };
+
+    const terrainGeometry = new THREE.PlaneGeometry(
+      terrainSize,
+      terrainSize,
+      terrainDetail,
+      terrainDetail
     );
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -1.3;
-    scene.add(ground);
+    terrainGeometry.rotateX(-Math.PI / 2);
+    const terrainVertices = terrainGeometry.attributes.position;
+
+    for (let index = 0; index < terrainVertices.count; index += 1) {
+      const x = terrainVertices.getX(index);
+      const z = terrainVertices.getZ(index);
+      terrainVertices.setY(index, terrainHeightAt(x, z));
+    }
+
+    terrainGeometry.computeVertexNormals();
+
+    const terrain = new THREE.Mesh(
+      terrainGeometry,
+      new THREE.MeshStandardMaterial({
+        color: 0x1e4f27,
+        roughness: 0.96,
+        metalness: 0.02,
+        flatShading: false
+      })
+    );
+    scene.add(terrain);
+
+    const treeCount = 30;
+    const minTreeRadius = 54;
+    const maxTreeRadius = 315;
+    const treeLoader = new GLTFLoader();
+    const treeInstances: Array<{ position: { set: (x: number, y: number, z: number) => void }; rotation: { y: number }; scale: { setScalar: (value: number) => void } }> = [];
+
+    treeLoader.load(pineTreeUrl, (gltf: { scene: unknown }) => {
+      const baseTree = gltf.scene;
+
+      for (let index = 0; index < treeCount; index += 1) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = THREE.MathUtils.lerp(minTreeRadius, maxTreeRadius, Math.sqrt(Math.random()));
+        const x = Math.cos(angle) * radius + THREE.MathUtils.randFloatSpread(20);
+        const z = Math.sin(angle) * radius + THREE.MathUtils.randFloatSpread(20);
+        const groundY = terrainHeightAt(x, z);
+
+        const tree = clone(baseTree) as unknown as {
+          position: { set: (tx: number, ty: number, tz: number) => void };
+          rotation: { y: number };
+          scale: { setScalar: (value: number) => void };
+        };
+        tree.position.set(x, groundY, z);
+        tree.rotation.y = Math.random() * Math.PI * 2;
+        tree.scale.setScalar(THREE.MathUtils.randFloat(0.048, 0.076));
+
+        treeInstances.push(tree);
+        scene.add(tree as never);
+      }
+    });
+
+    // ── Grass GLB ─────────────────────────────────────────────────────
+    const GRASS_INSTANCE_COUNT = 250;
+    const grassLoader = new GLTFLoader();
+    const grassInstances: Array<{
+      position: { set: (x: number, y: number, z: number) => void };
+      rotation: { y: number };
+      scale: { setScalar: (v: number) => void };
+    }> = [];
+
+    grassLoader.load(grassUrl, (gltf: { scene: unknown }) => {
+      const baseGrass = gltf.scene;
+      for (let index = 0; index < GRASS_INSTANCE_COUNT; index += 1) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = THREE.MathUtils.randFloat(4, 280);
+        const gx = Math.cos(angle) * radius;
+        const gz = Math.sin(angle) * radius;
+        const gy = terrainHeightAt(gx, gz);
+        const grass = clone(baseGrass) as unknown as {
+          position: { set: (tx: number, ty: number, tz: number) => void };
+          rotation: { y: number };
+          scale: { setScalar: (v: number) => void };
+        };
+        grass.position.set(gx, gy, gz);
+        grass.rotation.y = Math.random() * Math.PI * 2;
+        grass.scale.setScalar(THREE.MathUtils.randFloat(0.06, 0.12));
+        grassInstances.push(grass);
+        scene.add(grass as never);
+      }
+    });
 
     const starGeometry = new THREE.BufferGeometry();
     const starVertices = new Float32Array(STAR_COUNT * 3);
@@ -377,6 +480,14 @@ function App() {
     return () => {
       cancelAnimationFrame(frameId);
       window.removeEventListener('resize', onResize);
+
+      treeInstances.forEach((tree) => {
+        scene.remove(tree as never);
+      });
+
+      grassInstances.forEach((g) => {
+        scene.remove(g as never);
+      });
 
       shootingStars.forEach((star) => {
         scene.remove(star.line as never);

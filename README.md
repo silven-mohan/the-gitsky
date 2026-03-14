@@ -18,3 +18,10 @@ Interactive main-page night sky built with ThreeJS on a modern Vite + React + Ty
 	```
 
 4. Open the local URL shown in the terminal.
+
+## Credits
+
+- 3D tree model source: Sketchfab (https://sketchfab.com)
+- Model used in project: `src/media/models/pine_tree.glb`
+
+If you have the exact model page URL and author name, add them here for full attribution.
