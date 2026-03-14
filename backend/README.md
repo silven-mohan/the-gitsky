@@ -16,6 +16,7 @@ Express backend for GitHub OAuth and Supabase persistence.
 - `GITHUB_CLIENT_ID`
 - `GITHUB_CLIENT_SECRET`
 - `GITHUB_CALLBACK_URL`
+- `JWT_SECRET`
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
@@ -42,7 +43,8 @@ npm run dev
 3. GitHub redirects back to `/auth/github/callback`
 4. Backend exchanges code for token, fetches profile, computes star count
 5. Backend upserts into Supabase `gitusers` table
-6. Backend redirects to `${FRONTEND_URL}/login?authorized=1&username=<username>`
+6. Backend signs a JWT with `github_id` and `username`
+7. Backend redirects to `${FRONTEND_URL}/login?token=<jwt>`
 
 ## Supabase table
 
@@ -50,7 +52,10 @@ Create this table in Supabase:
 
 ```sql
 create table if not exists gitusers (
+	github_id bigint unique,
 	username text primary key,
-	starcount integer not null default 0
+	avatar_url text,
+	star_count integer not null default 0,
+	updated_at timestamptz not null default now()
 );
 ```

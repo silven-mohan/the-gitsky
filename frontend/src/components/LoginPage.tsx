@@ -2,10 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import styles from './LoginPage.module.css';
 
 type MeResponse = {
-  authenticated: boolean;
-  username?: string;
-  starCount?: number;
-  updatedAt?: string;
+  username: string;
+  avatar_url?: string;
+  star_count?: number;
 };
 
 const envBackendUrl = (import.meta as any).env?.VITE_BACKEND_URL as string | undefined;
@@ -13,7 +12,7 @@ const isLocalHost = window.location.hostname === 'localhost' || window.location.
 const BACKEND_URL = envBackendUrl || (isLocalHost ? 'http://localhost:4000' : '');
 
 function LoginPage() {
-  const [me, setMe] = useState<MeResponse>({ authenticated: false });
+  const [me, setMe] = useState<MeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const isBackendConfigured = Boolean(BACKEND_URL);
 
@@ -25,10 +24,23 @@ function LoginPage() {
   }, []);
 
   useEffect(() => {
-    let timer: number | undefined;
-
     if (!BACKEND_URL) {
       setError('Missing VITE_BACKEND_URL. Set it in Vercel project environment variables.');
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    const tokenFromUrl = url.searchParams.get('token');
+    if (tokenFromUrl) {
+      localStorage.setItem('auth_token', tokenFromUrl);
+      url.searchParams.delete('token');
+      window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+      window.location.replace('/world');
+      return;
+    }
+
+    const savedToken = localStorage.getItem('auth_token');
+    if (!savedToken) {
       return;
     }
 
@@ -36,9 +48,14 @@ function LoginPage() {
       try {
         setError(null);
         const response = await fetch(`${BACKEND_URL}/api/me`, {
-          credentials: 'include'
+          headers: {
+            Authorization: `Bearer ${savedToken}`
+          }
         });
         if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('auth_token');
+          }
           throw new Error(`Failed to fetch auth state (${response.status})`);
         }
         const payload = (await response.json()) as MeResponse;
@@ -50,13 +67,6 @@ function LoginPage() {
     };
 
     load();
-    timer = window.setInterval(load, 5000);
-
-    return () => {
-      if (timer) {
-        window.clearInterval(timer);
-      }
-    };
   }, []);
 
   return (
@@ -87,10 +97,10 @@ function LoginPage() {
         </div>
 
         <div className={styles.status}>
-          <strong>Status: {me.authenticated ? 'Authenticated' : 'Not authenticated'}</strong>
-          {me.username && <span>GitHub: {me.username}</span>}
-          {typeof me.starCount === 'number' && <span>Stars: {me.starCount}</span>}
-          {me.updatedAt && <span>Updated: {new Date(me.updatedAt).toLocaleString()}</span>}
+          <strong>Status: {me ? 'Authenticated' : 'Not authenticated'}</strong>
+          {me?.username && <span>GitHub: {me.username}</span>}
+          {me?.avatar_url && <span>Avatar: {me.avatar_url}</span>}
+          {typeof me?.star_count === 'number' && <span>Stars: {me.star_count}</span>}
           {error && <span>Error: {error}</span>}
         </div>
       </section>

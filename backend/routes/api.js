@@ -1,20 +1,21 @@
 import { Router } from 'express';
 import supabase from '../services/supabaseClient.js';
+import { requireAuth } from '../middleware/authMiddleware.js';
 
 const router = Router();
 
-router.get('/me', async (req, res) => {
-  const username = typeof req.query.username === 'string' ? req.query.username.trim() : '';
+router.get('/me', requireAuth, async (req, res) => {
+  const username = typeof req.auth?.username === 'string' ? req.auth.username : '';
 
   if (!username) {
-    res.status(400).json({ error: 'username required' });
+    res.status(401).json({ error: 'Unauthorized' });
     return;
   }
 
   try {
     const { data, error } = await supabase
       .from('gitusers')
-      .select('*')
+      .select('username, avatar_url, star_count')
       .eq('username', username)
       .single();
 

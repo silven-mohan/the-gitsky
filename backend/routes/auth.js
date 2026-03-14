@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import jwt from 'jsonwebtoken';
 import {
   exchangeCodeForAccessToken,
   fetchGitHubProfile,
@@ -12,6 +13,7 @@ const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || '';
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || '';
 const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL || '';
 const FRONTEND_URL = process.env.FRONTEND_URL || '';
+const JWT_SECRET = process.env.JWT_SECRET || '';
 
 router.get('/github', async (_req, res) => {
   try {
@@ -40,10 +42,10 @@ router.get('/github/callback', async (req, res) => {
       return;
     }
 
-    if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET || !GITHUB_CALLBACK_URL || !FRONTEND_URL) {
+    if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET || !GITHUB_CALLBACK_URL || !FRONTEND_URL || !JWT_SECRET) {
       res.status(500).json({
         error:
-          'Missing one or more required env variables: GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_CALLBACK_URL, FRONTEND_URL'
+          'Missing one or more required env variables: GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_CALLBACK_URL, FRONTEND_URL, JWT_SECRET'
       });
       return;
     }
@@ -56,14 +58,30 @@ router.get('/github/callback', async (req, res) => {
     });
 
     const profile = await fetchGitHubProfile(accessToken);
+    const githubId = profile.id;
     const username = profile.login;
+    const avatarUrl = profile.avatar_url || null;
     const starcount = await fetchGitHubStarCount({ username, accessToken });
 
-    await upsertGitUser({ username, starcount });
+    await upsertGitUser({
+      github_id: githubId,
+      username,
+      avatar_url: avatarUrl,
+      star_count: starcount,
+      updated_at: new Date().toISOString()
+    });
+
+    const token = jwt.sign(
+      {
+        github_id: githubId,
+        username
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
     const redirectUrl = new URL('/login', FRONTEND_URL);
-    redirectUrl.searchParams.set('authorized', '1');
-    redirectUrl.searchParams.set('username', username);
+    redirectUrl.searchParams.set('token', token);
     res.redirect(redirectUrl.toString());
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown callback error';
