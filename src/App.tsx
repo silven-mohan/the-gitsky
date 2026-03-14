@@ -27,10 +27,38 @@ function createNebulaTexture(colorA: string, colorB: string) {
     size * 0.5
   );
   gradient.addColorStop(0, colorA);
-  gradient.addColorStop(0.45, colorB);
+  gradient.addColorStop(0.34, colorB);
+  gradient.addColorStop(0.68, 'rgba(120, 90, 180, 0.08)');
   gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
   context.fillStyle = gradient;
+  context.fillRect(0, 0, size, size);
+
+  // Layer extra bright lobes so nebula spots read with clearer contrast at runtime.
+  const hotspotA = context.createRadialGradient(
+    size * 0.34,
+    size * 0.38,
+    0,
+    size * 0.34,
+    size * 0.38,
+    size * 0.3
+  );
+  hotspotA.addColorStop(0, 'rgba(255, 196, 246, 0.38)');
+  hotspotA.addColorStop(1, 'rgba(255, 196, 246, 0)');
+  context.fillStyle = hotspotA;
+  context.fillRect(0, 0, size, size);
+
+  const hotspotB = context.createRadialGradient(
+    size * 0.66,
+    size * 0.58,
+    0,
+    size * 0.66,
+    size * 0.58,
+    size * 0.28
+  );
+  hotspotB.addColorStop(0, 'rgba(186, 142, 255, 0.34)');
+  hotspotB.addColorStop(1, 'rgba(186, 142, 255, 0)');
+  context.fillStyle = hotspotB;
   context.fillRect(0, 0, size, size);
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -49,8 +77,8 @@ function App() {
     }
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x120a1f);
-    scene.fog = new THREE.Fog(0x120a1f, 180, 520);
+    scene.background = new THREE.Color(0x060f22);
+    scene.fog = new THREE.Fog(0x060f22, 180, 520);
 
     const camera = new THREE.PerspectiveCamera(
       62,
@@ -98,10 +126,10 @@ function App() {
     const skyDome = new THREE.Mesh(
       new THREE.SphereGeometry(560, 48, 32),
       new THREE.MeshBasicMaterial({
-        color: 0x28193f,
+        color: 0x0a1b3f,
         side: THREE.BackSide,
         transparent: true,
-        opacity: 0.84
+        opacity: 0.86
       })
     );
     scene.add(skyDome);
@@ -109,10 +137,10 @@ function App() {
     const horizonRing = new THREE.Mesh(
       new THREE.RingGeometry(130, 520, 100),
       new THREE.MeshBasicMaterial({
-        color: 0x513f93,
+        color: 0x1a3f87,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.14
+        opacity: 0.12
       })
     );
     horizonRing.rotation.x = -Math.PI / 2;
@@ -185,36 +213,37 @@ function App() {
     starBand.rotation.y = 0.28;
     scene.add(starBand);
 
-    const nebulaTexturePink = createNebulaTexture('rgba(255, 166, 230, 0.24)', 'rgba(229, 126, 241, 0.12)');
-    const nebulaTexturePurple = createNebulaTexture('rgba(214, 157, 255, 0.21)', 'rgba(153, 119, 255, 0.1)');
+    const nebulaTexturePink = createNebulaTexture('rgba(255, 153, 230, 0.27)', 'rgba(220, 124, 242, 0.15)');
+    const nebulaTexturePurple = createNebulaTexture('rgba(208, 154, 255, 0.25)', 'rgba(140, 112, 250, 0.13)');
     const nebulaMaterialPink = new THREE.SpriteMaterial({
       map: nebulaTexturePink,
       transparent: true,
-      opacity: 0.18,
+      opacity: 0.4,
       depthWrite: false,
+      depthTest: false,
       blending: THREE.AdditiveBlending
     });
     const nebulaMaterialPurple = new THREE.SpriteMaterial({
       map: nebulaTexturePurple,
       transparent: true,
-      opacity: 0.16,
+      opacity: 0.36,
       depthWrite: false,
+      depthTest: false,
       blending: THREE.AdditiveBlending
     });
 
     const nebulaSprites: { material: { opacity: number } }[] = [];
     const nebulaConfigs = [
-      { x: -140, y: 120, z: -280, scale: 250, material: nebulaMaterialPink },
-      { x: 120, y: 150, z: -220, scale: 220, material: nebulaMaterialPurple },
-      { x: 220, y: 95, z: 90, scale: 180, material: nebulaMaterialPink },
-      { x: -210, y: 110, z: 160, scale: 200, material: nebulaMaterialPurple }
+      { x: 130, y: 170, z: -210, scale: 240, material: nebulaMaterialPurple },
+      { x: 225, y: 110, z: 92, scale: 170, material: nebulaMaterialPink }
     ] as const;
 
     nebulaConfigs.forEach((config) => {
       const sprite = new THREE.Sprite(config.material);
       sprite.position.set(config.x, config.y, config.z);
-      sprite.scale.set(config.scale, config.scale * 0.7, 1);
+      sprite.scale.set(config.scale * 1.14, config.scale * 0.82, 1);
       sprite.material.rotation = Math.random() * Math.PI;
+      sprite.renderOrder = 3;
       nebulaSprites.push(sprite);
       scene.add(sprite);
     });
@@ -300,10 +329,11 @@ function App() {
 
       stars.rotation.y = t * 0.005;
       starBand.rotation.y = 0.28 + t * 0.002;
-      nebulaSprites[0].material.opacity = 0.15 + Math.sin(t * 0.22) * 0.02;
-      nebulaSprites[1].material.opacity = 0.14 + Math.sin(t * 0.18 + 0.5) * 0.02;
-      nebulaSprites[2].material.opacity = 0.13 + Math.sin(t * 0.2 + 0.8) * 0.015;
-      nebulaSprites[3].material.opacity = 0.12 + Math.sin(t * 0.26 + 1.3) * 0.02;
+      for (let index = 0; index < nebulaSprites.length; index += 1) {
+        const sprite = nebulaSprites[index];
+        const pulse = 0.29 + Math.sin(t * (0.2 + index * 0.03) + index * 0.7) * 0.08;
+        sprite.material.opacity = pulse;
+      }
       skyDome.material.opacity = 0.82 + Math.sin(t * 0.08) * 0.02;
 
       starsMaterial.opacity = 0.86 + Math.sin(t * 0.7) * 0.05;
@@ -331,7 +361,7 @@ function App() {
         star.line.material.opacity = Math.max(0, 0.9 * (1 - progress * 1.15));
 
         if (progress >= 1) {
-          scene.remove(star.line as unknown as THREE.Object3D);
+          scene.remove(star.line as never);
           star.line.geometry.dispose();
           star.line.material.dispose();
           shootingStars.splice(index, 1);
@@ -349,7 +379,7 @@ function App() {
       window.removeEventListener('resize', onResize);
 
       shootingStars.forEach((star) => {
-        scene.remove(star.line as unknown as THREE.Object3D);
+        scene.remove(star.line as never);
         star.line.geometry.dispose();
         star.line.material.dispose();
       });
