@@ -4,6 +4,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const STAR_COUNT = 6500;
 
+const SHOOTING_STAR_MIN_DELAY = 2.2;
+const SHOOTING_STAR_MAX_DELAY = 7.5;
+
 function createNebulaTexture(colorA: string, colorB: string) {
   const size = 512;
   const canvas = document.createElement('canvas');
@@ -46,8 +49,8 @@ function App() {
     }
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x060f22);
-    scene.fog = new THREE.Fog(0x060f22, 180, 520);
+    scene.background = new THREE.Color(0x120a1f);
+    scene.fog = new THREE.Fog(0x120a1f, 180, 520);
 
     const camera = new THREE.PerspectiveCamera(
       62,
@@ -95,10 +98,10 @@ function App() {
     const skyDome = new THREE.Mesh(
       new THREE.SphereGeometry(560, 48, 32),
       new THREE.MeshBasicMaterial({
-        color: 0x0a1b3f,
+        color: 0x28193f,
         side: THREE.BackSide,
         transparent: true,
-        opacity: 0.86
+        opacity: 0.84
       })
     );
     scene.add(skyDome);
@@ -106,10 +109,10 @@ function App() {
     const horizonRing = new THREE.Mesh(
       new THREE.RingGeometry(130, 520, 100),
       new THREE.MeshBasicMaterial({
-        color: 0x1a3f87,
+        color: 0x513f93,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.12
+        opacity: 0.14
       })
     );
     horizonRing.rotation.x = -Math.PI / 2;
@@ -182,8 +185,8 @@ function App() {
     starBand.rotation.y = 0.28;
     scene.add(starBand);
 
-    const nebulaTexturePink = createNebulaTexture('rgba(255, 148, 232, 0.2)', 'rgba(195, 114, 255, 0.11)');
-    const nebulaTexturePurple = createNebulaTexture('rgba(198, 150, 255, 0.22)', 'rgba(133, 109, 255, 0.1)');
+    const nebulaTexturePink = createNebulaTexture('rgba(255, 166, 230, 0.24)', 'rgba(229, 126, 241, 0.12)');
+    const nebulaTexturePurple = createNebulaTexture('rgba(214, 157, 255, 0.21)', 'rgba(153, 119, 255, 0.1)');
     const nebulaMaterialPink = new THREE.SpriteMaterial({
       map: nebulaTexturePink,
       transparent: true,
@@ -216,6 +219,64 @@ function App() {
       scene.add(sprite);
     });
 
+    const shootingStars: Array<{
+      line: { geometry: { dispose: () => void }; material: { opacity: number; dispose: () => void }; position: { copy: (value: unknown) => void; set: (x: number, y: number, z: number) => void }; quaternion: { setFromUnitVectors: (a: unknown, b: unknown) => void } };
+      start: { x: number; y: number; z: number };
+      direction: { x: number; y: number; z: number };
+      speed: number;
+      life: number;
+      age: number;
+      tail: number;
+    }> = [];
+
+    const upVector = new THREE.Vector3(0, 1, 0);
+    let nextShootingStarTime = THREE.MathUtils.randFloat(
+      SHOOTING_STAR_MIN_DELAY,
+      SHOOTING_STAR_MAX_DELAY
+    );
+
+    const spawnShootingStar = () => {
+      const start = new THREE.Vector3(
+        THREE.MathUtils.randFloatSpread(420),
+        THREE.MathUtils.randFloat(95, 250),
+        THREE.MathUtils.randFloatSpread(420)
+      );
+
+      const direction = new THREE.Vector3(
+        THREE.MathUtils.randFloat(-1.1, -0.25),
+        THREE.MathUtils.randFloat(-0.42, -0.18),
+        THREE.MathUtils.randFloat(-0.55, 0.55)
+      ).normalize();
+
+      const tail = THREE.MathUtils.randFloat(20, 32);
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, tail, 0)
+      ]);
+      const material = new THREE.LineBasicMaterial({
+        color: 0xffd7fd,
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+
+      const line = new THREE.Line(geometry, material);
+      line.position.copy(start);
+      line.quaternion.setFromUnitVectors(upVector, direction.clone().negate());
+      scene.add(line);
+
+      shootingStars.push({
+        line,
+        start,
+        direction,
+        speed: THREE.MathUtils.randFloat(120, 180),
+        life: THREE.MathUtils.randFloat(0.55, 1.05),
+        age: 0,
+        tail
+      });
+    };
+
     const onResize = () => {
       if (!canvasWrapRef.current) {
         return;
@@ -234,7 +295,8 @@ function App() {
 
     const animate = () => {
       frameId = requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
+      const delta = clock.getDelta();
+      const t = clock.elapsedTime;
 
       stars.rotation.y = t * 0.005;
       starBand.rotation.y = 0.28 + t * 0.002;
@@ -242,9 +304,39 @@ function App() {
       nebulaSprites[1].material.opacity = 0.14 + Math.sin(t * 0.18 + 0.5) * 0.02;
       nebulaSprites[2].material.opacity = 0.13 + Math.sin(t * 0.2 + 0.8) * 0.015;
       nebulaSprites[3].material.opacity = 0.12 + Math.sin(t * 0.26 + 1.3) * 0.02;
+      skyDome.material.opacity = 0.82 + Math.sin(t * 0.08) * 0.02;
 
       starsMaterial.opacity = 0.86 + Math.sin(t * 0.7) * 0.05;
       bandMaterial.opacity = 0.32 + Math.sin(t * 0.5 + 0.7) * 0.04;
+
+      if (t > nextShootingStarTime && shootingStars.length < 3) {
+        spawnShootingStar();
+        nextShootingStarTime = t + THREE.MathUtils.randFloat(
+          SHOOTING_STAR_MIN_DELAY,
+          SHOOTING_STAR_MAX_DELAY
+        );
+      }
+
+      for (let index = shootingStars.length - 1; index >= 0; index -= 1) {
+        const star = shootingStars[index];
+        star.age += delta;
+        const progress = star.age / star.life;
+
+        const travel = star.speed * star.age;
+        star.line.position.set(
+          star.start.x + star.direction.x * travel,
+          star.start.y + star.direction.y * travel,
+          star.start.z + star.direction.z * travel
+        );
+        star.line.material.opacity = Math.max(0, 0.9 * (1 - progress * 1.15));
+
+        if (progress >= 1) {
+          scene.remove(star.line as unknown as THREE.Object3D);
+          star.line.geometry.dispose();
+          star.line.material.dispose();
+          shootingStars.splice(index, 1);
+        }
+      }
 
       controls.update();
       renderer.render(scene, camera);
@@ -255,6 +347,12 @@ function App() {
     return () => {
       cancelAnimationFrame(frameId);
       window.removeEventListener('resize', onResize);
+
+      shootingStars.forEach((star) => {
+        scene.remove(star.line as unknown as THREE.Object3D);
+        star.line.geometry.dispose();
+        star.line.material.dispose();
+      });
 
       controls.dispose();
       starGeometry.dispose();
