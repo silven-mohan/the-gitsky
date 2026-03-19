@@ -18,6 +18,19 @@ const getGitUserByUsername = async (username) => {
   return data;
 };
 
+const getAllGitUsers = async () => {
+  const { data, error } = await supabase
+    .from('gitusers')
+    .select('username, starcount')
+    .order('starcount', { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data || [];
+};
+
 router.get('/me', requireAuth, async (req, res) => {
   const username = typeof req.auth?.username === 'string' ? req.auth.username : '';
 
@@ -64,6 +77,20 @@ router.get('/user-star', requireAuth, async (req, res) => {
       return;
     }
 
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+router.get('/stars', requireAuth, async (_req, res) => {
+  try {
+    const users = await getAllGitUsers();
+    res.json({
+      users: users.map((user) => ({
+        username: user.username,
+        star_count: Number(user.starcount) || 0
+      }))
+    });
+  } catch {
     res.status(500).json({ error: 'Database error' });
   }
 });

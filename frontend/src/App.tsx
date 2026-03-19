@@ -9,12 +9,16 @@ const SHOOTING_STARS_PER_BURST = 4;
 const MAX_ACTIVE_SHOOTING_STARS = 14;
 const MIN_CAMERA_DISTANCE = 18;
 const MAX_CAMERA_DISTANCE = 260;
-const USER_STAR_MIN_SCALE = 2;
-const USER_STAR_MAX_SCALE = 13;
+const USER_STAR_MIN_SIZE = 8;
+const USER_STAR_MAX_SIZE = 30;
 
-type UserStarResponse = {
+type UserStar = {
   username: string;
   star_count: number;
+};
+
+type UserStarsResponse = {
+  users: UserStar[];
 };
 
 const envBackendUrl = (import.meta as any).env?.VITE_BACKEND_URL as string | undefined;
@@ -34,64 +38,88 @@ type ShootingStar = {
   life: number;
   age: number;
 };
-
-function createGitHubStarShape(outerRadius: number, innerRadius: number) {
-  const shape = new THREE.Shape();
-  const points = [];
-
-  for (let index = 0; index < 10; index += 1) {
-    const angle = -Math.PI / 2 + (index * Math.PI) / 5;
-    const radius = index % 2 === 0 ? outerRadius : innerRadius;
-    points.push(new THREE.Vector2(Math.cos(angle) * radius, Math.sin(angle) * radius));
-  }
-
-  shape.moveTo(points[0].x, points[0].y);
-  for (let index = 1; index < points.length; index += 1) {
-    shape.lineTo(points[index].x, points[index].y);
-  }
-  shape.closePath();
-
-  return shape;
-}
-
-function mapStarCountToScale(starCount: number) {
+function mapStarCountToSize(starCount: number) {
   // Log scaling keeps extreme star counts visually balanced while preserving growth.
   const safeCount = Math.max(0, starCount);
   const normalized = THREE.MathUtils.clamp(Math.log10(safeCount + 1) / 4, 0, 1);
-  return THREE.MathUtils.lerp(USER_STAR_MIN_SCALE, USER_STAR_MAX_SCALE, normalized);
+  return THREE.MathUtils.lerp(USER_STAR_MIN_SIZE, USER_STAR_MAX_SIZE, normalized);
 }
 
-function createUserStarMesh(starCount: number) {
-  const starShape = createGitHubStarShape(2.2, 0.95);
-  const starGeometry = new THREE.ExtrudeGeometry(starShape, {
-    depth: 0.6,
-    bevelEnabled: true,
-    bevelSegments: 2,
-    steps: 1,
-    bevelSize: 0.18,
-    bevelThickness: 0.12
-  });
-  starGeometry.center();
+function drawStarPath(ctx: CanvasRenderingContext2D, cx: number, cy: number, outerRadius: number, innerRadius: number) {
+  ctx.beginPath();
+  for (let index = 0; index < 10; index += 1) {
+    const angle = -Math.PI / 2 + (index * Math.PI) / 5;
+    const radius = index % 2 === 0 ? outerRadius : innerRadius;
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
+    if (index === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
+  ctx.closePath();
+}
 
-  const starMaterial = new THREE.MeshStandardMaterial({
-    color: 0xf7d046,
-    emissive: 0xffd95f,
-    emissiveIntensity: 0.85,
-    metalness: 0.22,
-    roughness: 0.35
-  });
+function createGlowStarTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
 
-  const mesh = new THREE.Mesh(starGeometry, starMaterial);
-  const scale = mapStarCountToScale(starCount);
-  mesh.scale.setScalar(scale);
+  if (!ctx) {
+    return null;
+  }
 
-  return mesh;
+  const center = canvas.width / 2;
+
+  const glow = ctx.createRadialGradient(center, center, 10, center, center, 120);
+  glow.addColorStop(0, 'rgba(255, 245, 188, 0.95)');
+  glow.addColorStop(0.4, 'rgba(255, 220, 102, 0.45)');
+  glow.addColorStop(1, 'rgba(255, 170, 40, 0)');
+
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.shadowColor = '#ffd95b';
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = '#ffd95b';
+  drawStarPath(ctx, center, center, 52, 24);
+  ctx.fill();
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function hashString(text: string) {
+  let hash = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    hash = (hash << 5) - hash + text.charCodeAt(index);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function getStarPosition(username: string, index: number, total: number) {
+  const hash = hashString(username);
+  const baseAngle = (index / Math.max(total, 1)) * Math.PI * 2;
+  const jitter = ((hash % 1000) / 1000) * 0.7;
+  const radius = 52 + (hash % 28);
+  const y = -20 + ((hash >> 3) % 44);
+
+  return new THREE.Vector3(
+    Math.cos(baseAngle + jitter) * radius,
+    y,
+    Math.sin(baseAngle + jitter) * radius
+  );
 }
 
 function App() {
   const canvasWrapRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<any>(null);
   const [isCardOpen, setIsCardOpen] = useState(true);
+  const [selectedUserStar, setSelectedUserStar] = useState<UserStar | null>(null);
 
   useEffect(() => {
     const mount = canvasWrapRef.current;
@@ -152,47 +180,144 @@ function App() {
     controls.target.copy(moon.position);
     controls.update();
 
-    let userStarMesh: any = null;
+    const userStarsGroup = new THREE.Group();
+    scene.add(userStarsGroup);
 
-    const placeUserStar = (starCount: number) => {
-      if (userStarMesh) {
-        scene.remove(userStarMesh);
-        userStarMesh.geometry.dispose();
-        (userStarMesh.material as any).dispose();
+    const starTexture = createGlowStarTexture();
+    const raycaster = new THREE.Raycaster();
+    raycaster.params.Points.threshold = 8;
+    const pointer = new THREE.Vector2();
+
+    const userStarEntries: Array<{
+      points: any;
+      material: any;
+      geometry: any;
+      data: UserStar;
+      baseSize: number;
+      basePosition: any;
+      twinkleOffset: number;
+    }> = [];
+
+    const clearUserStars = () => {
+      for (let index = userStarEntries.length - 1; index >= 0; index -= 1) {
+        const entry = userStarEntries[index];
+        userStarsGroup.remove(entry.points);
+        entry.geometry.dispose();
+        entry.material.dispose();
       }
-
-      userStarMesh = createUserStarMesh(starCount);
-      userStarMesh.position.set(0, 20, 28);
-      userStarMesh.rotation.x = -0.28;
-      userStarMesh.rotation.y = 0.35;
-      scene.add(userStarMesh);
+      userStarEntries.length = 0;
     };
 
-    const loadUserStar = async () => {
+    const createUserStarPoint = (user: UserStar, index: number, total: number) => {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0], 3));
+
+      const baseSize = mapStarCountToSize(user.star_count);
+      const material = new THREE.PointsMaterial({
+        color: 0xffd95b,
+        map: starTexture || undefined,
+        transparent: true,
+        opacity: 0.96,
+        depthWrite: false,
+        sizeAttenuation: true,
+        size: baseSize,
+        alphaTest: 0.06,
+        blending: THREE.AdditiveBlending
+      });
+
+      const points = new THREE.Points(geometry, material);
+      const basePosition = getStarPosition(user.username, index, total);
+      points.position.copy(basePosition);
+      points.userData = user;
+      userStarsGroup.add(points);
+
+      userStarEntries.push({
+        points,
+        material,
+        geometry,
+        data: user,
+        baseSize,
+        basePosition,
+        twinkleOffset: ((index + 1) * 0.47) % (Math.PI * 2)
+      });
+    };
+
+    const loadUserStars = async () => {
       const token = localStorage.getItem('auth_token');
       if (!token || !BACKEND_URL) {
+        setSelectedUserStar(null);
         return;
       }
 
       try {
-        const response = await fetch(`${BACKEND_URL}/api/user-star`, {
+        const response = await fetch(`${BACKEND_URL}/api/stars`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
 
         if (!response.ok) {
+          setSelectedUserStar(null);
           return;
         }
 
-        const payload = (await response.json()) as UserStarResponse;
-        placeUserStar(Number(payload.star_count) || 0);
+        const payload = (await response.json()) as UserStarsResponse;
+        const users = Array.isArray(payload.users) ? payload.users : [];
+
+        clearUserStars();
+        users.forEach((user, index) => {
+          createUserStarPoint(
+            {
+              username: user.username,
+              star_count: Number(user.star_count) || 0
+            },
+            index,
+            users.length
+          );
+        });
       } catch {
         // Silent failure keeps the world usable even when auth data is unavailable.
+        setSelectedUserStar(null);
       }
     };
 
-    loadUserStar();
+    const pickUserStar = (clientX: number, clientY: number) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+
+      const intersects = raycaster.intersectObjects(
+        userStarEntries.map((entry) => entry.points),
+        false
+      );
+
+      if (intersects.length === 0) {
+        return null;
+      }
+
+      const hit = intersects[0].object;
+      const entry = userStarEntries.find((star) => star.points === hit);
+      return entry || null;
+    };
+
+    const handleCanvasClick = (event: MouseEvent) => {
+      const selected = pickUserStar(event.clientX, event.clientY);
+      if (!selected) {
+        return;
+      }
+      setSelectedUserStar(selected.data);
+    };
+
+    const handleCanvasMove = (event: MouseEvent) => {
+      const selected = pickUserStar(event.clientX, event.clientY);
+      renderer.domElement.style.cursor = selected ? 'pointer' : 'default';
+    };
+
+    renderer.domElement.addEventListener('click', handleCanvasClick);
+    renderer.domElement.addEventListener('mousemove', handleCanvasMove);
+
+    loadUserStars();
 
     const starGeometry = new THREE.BufferGeometry();
     const starVertices = new Float32Array(STAR_COUNT * 3);
@@ -288,9 +413,12 @@ function App() {
       stars.rotation.y = t * 0.008;
       starsMaterial.opacity = 0.9 + Math.sin(t * 0.7) * 0.06;
 
-      if (userStarMesh) {
-        userStarMesh.rotation.z = t * 0.24;
-        userStarMesh.rotation.y = 0.35 + Math.sin(t * 0.7) * 0.05;
+      for (let index = 0; index < userStarEntries.length; index += 1) {
+        const entry = userStarEntries[index];
+        entry.material.size = entry.baseSize * (1 + Math.sin(t * 1.5 + entry.twinkleOffset) * 0.12);
+        entry.points.position.x = entry.basePosition.x + Math.sin(t * 0.16 + entry.twinkleOffset) * 1.3;
+        entry.points.position.y = entry.basePosition.y + Math.cos(t * 0.18 + entry.twinkleOffset) * 0.8;
+        entry.points.position.z = entry.basePosition.z + Math.cos(t * 0.15 + entry.twinkleOffset) * 1.3;
       }
 
       if (t > nextShootingStarTime) {
@@ -332,6 +460,8 @@ function App() {
     return () => {
       cancelAnimationFrame(frameId);
       window.removeEventListener('resize', onResize);
+      renderer.domElement.removeEventListener('click', handleCanvasClick);
+      renderer.domElement.removeEventListener('mousemove', handleCanvasMove);
 
       shootingStars.forEach((star) => {
         scene.remove(star.line);
@@ -339,15 +469,15 @@ function App() {
         star.line.material.dispose();
       });
 
+      clearUserStars();
+
       controls.dispose();
       controlsRef.current = null;
       starGeometry.dispose();
       starsMaterial.dispose();
 
-      if (userStarMesh) {
-        scene.remove(userStarMesh);
-        userStarMesh.geometry.dispose();
-        (userStarMesh.material as any).dispose();
+      if (starTexture) {
+        starTexture.dispose();
       }
 
       renderer.dispose();
@@ -408,6 +538,16 @@ function App() {
       >
         ˅
       </button>
+      <section className="star-info-panel">
+        {selectedUserStar ? (
+          <>
+            <strong>{selectedUserStar.username}</strong>
+            <span>Stars: {selectedUserStar.star_count}</span>
+          </>
+        ) : (
+          <span>Click a user star to view username and star count.</span>
+        )}
+      </section>
     </main>
   );
 }
