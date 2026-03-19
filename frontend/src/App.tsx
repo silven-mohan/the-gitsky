@@ -9,6 +9,17 @@ const SHOOTING_STARS_PER_BURST = 4;
 const MAX_ACTIVE_SHOOTING_STARS = 14;
 const MIN_CAMERA_DISTANCE = 18;
 const MAX_CAMERA_DISTANCE = 260;
+const USER_STAR_MIN_SCALE = 2;
+const USER_STAR_MAX_SCALE = 13;
+
+type UserStarResponse = {
+  username: string;
+  star_count: number;
+};
+
+const envBackendUrl = (import.meta as any).env?.VITE_BACKEND_URL as string | undefined;
+const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const BACKEND_URL = envBackendUrl || (isLocalHost ? 'http://localhost:4000' : '');
 
 type ShootingStar = {
   line: {
@@ -23,6 +34,59 @@ type ShootingStar = {
   life: number;
   age: number;
 };
+
+function createGitHubStarShape(outerRadius: number, innerRadius: number) {
+  const shape = new THREE.Shape();
+  const points = [];
+
+  for (let index = 0; index < 10; index += 1) {
+    const angle = -Math.PI / 2 + (index * Math.PI) / 5;
+    const radius = index % 2 === 0 ? outerRadius : innerRadius;
+    points.push(new THREE.Vector2(Math.cos(angle) * radius, Math.sin(angle) * radius));
+  }
+
+  shape.moveTo(points[0].x, points[0].y);
+  for (let index = 1; index < points.length; index += 1) {
+    shape.lineTo(points[index].x, points[index].y);
+  }
+  shape.closePath();
+
+  return shape;
+}
+
+function mapStarCountToScale(starCount: number) {
+  // Log scaling keeps extreme star counts visually balanced while preserving growth.
+  const safeCount = Math.max(0, starCount);
+  const normalized = THREE.MathUtils.clamp(Math.log10(safeCount + 1) / 4, 0, 1);
+  return THREE.MathUtils.lerp(USER_STAR_MIN_SCALE, USER_STAR_MAX_SCALE, normalized);
+}
+
+function createUserStarMesh(starCount: number) {
+  const starShape = createGitHubStarShape(2.2, 0.95);
+  const starGeometry = new THREE.ExtrudeGeometry(starShape, {
+    depth: 0.6,
+    bevelEnabled: true,
+    bevelSegments: 2,
+    steps: 1,
+    bevelSize: 0.18,
+    bevelThickness: 0.12
+  });
+  starGeometry.center();
+
+  const starMaterial = new THREE.MeshStandardMaterial({
+    color: 0xf7d046,
+    emissive: 0xffd95f,
+    emissiveIntensity: 0.85,
+    metalness: 0.22,
+    roughness: 0.35
+  });
+
+  const mesh = new THREE.Mesh(starGeometry, starMaterial);
+  const scale = mapStarCountToScale(starCount);
+  mesh.scale.setScalar(scale);
+
+  return mesh;
+}
 
 function App() {
   const canvasWrapRef = useRef<HTMLDivElement | null>(null);
@@ -87,6 +151,48 @@ function App() {
 
     controls.target.copy(moon.position);
     controls.update();
+
+    let userStarMesh: any = null;
+
+    const placeUserStar = (starCount: number) => {
+      if (userStarMesh) {
+        scene.remove(userStarMesh);
+        userStarMesh.geometry.dispose();
+        (userStarMesh.material as any).dispose();
+      }
+
+      userStarMesh = createUserStarMesh(starCount);
+      userStarMesh.position.set(0, 20, 28);
+      userStarMesh.rotation.x = -0.28;
+      userStarMesh.rotation.y = 0.35;
+      scene.add(userStarMesh);
+    };
+
+    const loadUserStar = async () => {
+      const token = localStorage.getItem('auth_token');
+      if (!token || !BACKEND_URL) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/user-star`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const payload = (await response.json()) as UserStarResponse;
+        placeUserStar(Number(payload.star_count) || 0);
+      } catch {
+        // Silent failure keeps the world usable even when auth data is unavailable.
+      }
+    };
+
+    loadUserStar();
 
     const starGeometry = new THREE.BufferGeometry();
     const starVertices = new Float32Array(STAR_COUNT * 3);
@@ -182,6 +288,11 @@ function App() {
       stars.rotation.y = t * 0.008;
       starsMaterial.opacity = 0.9 + Math.sin(t * 0.7) * 0.06;
 
+      if (userStarMesh) {
+        userStarMesh.rotation.z = t * 0.24;
+        userStarMesh.rotation.y = 0.35 + Math.sin(t * 0.7) * 0.05;
+      }
+
       if (t > nextShootingStarTime) {
         const canSpawn = Math.max(0, MAX_ACTIVE_SHOOTING_STARS - shootingStars.length);
         const burstCount = Math.min(SHOOTING_STARS_PER_BURST, canSpawn);
@@ -232,6 +343,13 @@ function App() {
       controlsRef.current = null;
       starGeometry.dispose();
       starsMaterial.dispose();
+
+      if (userStarMesh) {
+        scene.remove(userStarMesh);
+        userStarMesh.geometry.dispose();
+        (userStarMesh.material as any).dispose();
+      }
+
       renderer.dispose();
 
       scene.traverse((child: { geometry?: { dispose: () => void }; material?: { dispose: () => void } | Array<{ dispose: () => void }> }) => {
