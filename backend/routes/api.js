@@ -81,7 +81,7 @@ router.get('/user-star', requireAuth, async (req, res) => {
   }
 });
 
-router.get('/stars', requireAuth, async (_req, res) => {
+router.get('/stars', async (_req, res) => {
   try {
     const users = await getAllGitUsers();
     res.json({

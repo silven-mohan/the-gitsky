@@ -244,17 +244,14 @@ function App() {
 
     const loadUserStars = async () => {
       const token = localStorage.getItem('auth_token');
-      if (!token || !BACKEND_URL) {
+      if (!BACKEND_URL) {
         setSelectedUserStar(null);
         return;
       }
 
       try {
-        const response = await fetch(`${BACKEND_URL}/api/stars`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+        const response = await fetch(`${BACKEND_URL}/api/stars`, { headers });
 
         if (!response.ok) {
           setSelectedUserStar(null);
