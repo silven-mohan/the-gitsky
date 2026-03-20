@@ -42,3 +42,7 @@ See the full tree and structure notes in [PROJECT_STRUCTURE.md](PROJECT_STRUCTUR
 ## Credits
 
 - Video Credit goes to: NASA's Goddard Space Flight Center/CI Lab
+
+## Notes
+
+- Local rebase checkpoint updated on 2026-03-21.
