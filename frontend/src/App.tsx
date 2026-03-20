@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { TIFFLoader } from 'three/examples/jsm/loaders/TIFFLoader.js';
 
 const STAR_COUNT = 18000;
 
@@ -12,7 +13,7 @@ const MAX_CAMERA_DISTANCE = 260;
 const USER_STAR_MIN_SIZE = 8;
 const USER_STAR_MAX_SIZE = 30;
 const ZOOM_ANIMATION_DURATION_MS = 900;
-const MOON_TEXTURE_URL = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/lroc_color_poles_1k.jpg';
+const MOON_TEXTURE_URL = '/textures/lroc_color_poles_4k.tif';
 const MOON_DISPLACEMENT_URL = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/ldem_3_8bit.jpg';
 const MOON_TEXTURE_CREDIT_URL = 'https://codepen.io/mustafakaytar/pens/';
 
@@ -276,7 +277,8 @@ function App() {
     scene.add(blueBackLight);
 
     const textureLoader = new THREE.TextureLoader();
-    const moonTexture = textureLoader.load(MOON_TEXTURE_URL);
+    const tiffLoader = new TIFFLoader();
+    const moonTexture = tiffLoader.load(MOON_TEXTURE_URL);
     moonTexture.colorSpace = THREE.SRGBColorSpace;
     const moonDisplacementTexture = textureLoader.load(MOON_DISPLACEMENT_URL);
 
