@@ -181,7 +181,7 @@ body,
   display: flex;
   gap: 0.8rem;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: min(560px, calc(100vw - 2rem));
   min-height: 2.75rem;
   padding: 0.7rem 1rem;
@@ -194,11 +194,16 @@ body,
   z-index: 3;
 }
 
-.star-info-panel strong {
-  color: #ffe279;
-  font-weight: 700;
-}
-
 .star-info-panel span {
   color: #d8e7ff;
+}
+
+.star-info-panel__username {
+  color: #ffe279;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.star-info-panel__username:hover {
+  text-decoration: underline;
 }

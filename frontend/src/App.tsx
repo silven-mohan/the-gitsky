@@ -7,10 +7,11 @@ const STAR_COUNT = 18000;
 const SHOOTING_STAR_BURST_INTERVAL = 5;
 const SHOOTING_STARS_PER_BURST = 4;
 const MAX_ACTIVE_SHOOTING_STARS = 14;
-const MIN_CAMERA_DISTANCE = 18;
+const MIN_CAMERA_DISTANCE = 8.4;
 const MAX_CAMERA_DISTANCE = 260;
 const USER_STAR_MIN_SIZE = 8;
 const USER_STAR_MAX_SIZE = 30;
+const ZOOM_ANIMATION_DURATION_MS = 900;
 
 type UserStar = {
   username: string;
@@ -92,6 +93,53 @@ function createGlowStarTexture() {
   return texture;
 }
 
+function createMoonTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    return null;
+  }
+
+  const center = canvas.width / 2;
+  const baseGradient = ctx.createRadialGradient(center * 0.82, center * 0.78, 20, center, center, center * 1.05);
+  baseGradient.addColorStop(0, '#f4fbff');
+  baseGradient.addColorStop(0.42, '#cedef3');
+  baseGradient.addColorStop(1, '#8ea9c8');
+  ctx.fillStyle = baseGradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (let index = 0; index < 140; index += 1) {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    const craterRadius = 4 + Math.random() * 26;
+
+    const crater = ctx.createRadialGradient(
+      x - craterRadius * 0.2,
+      y - craterRadius * 0.2,
+      craterRadius * 0.1,
+      x,
+      y,
+      craterRadius
+    );
+    crater.addColorStop(0, 'rgba(245, 253, 255, 0.22)');
+    crater.addColorStop(0.5, 'rgba(139, 168, 201, 0.18)');
+    crater.addColorStop(1, 'rgba(74, 95, 126, 0.02)');
+    ctx.fillStyle = crater;
+    ctx.beginPath();
+    ctx.arc(x, y, craterRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.needsUpdate = true;
+  return texture;
+}
+
 function hashString(text: string) {
   let hash = 0;
   for (let index = 0; index < text.length; index += 1) {
@@ -126,6 +174,35 @@ function App() {
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userSearchFeedback, setUserSearchFeedback] = useState('');
 
+  const zoomAnimationRef = useRef<{
+    active: boolean;
+    startTime: number;
+    duration: number;
+    fromPosition: any;
+    toPosition: any;
+    fromTarget: any;
+    toTarget: any;
+  } | null>(null);
+
+  const startCameraTransition = (destinationPosition: any, destinationTarget: any) => {
+    const camera = cameraRef.current;
+    const controls = controlsRef.current;
+
+    if (!camera || !controls) {
+      return;
+    }
+
+    zoomAnimationRef.current = {
+      active: true,
+      startTime: performance.now(),
+      duration: ZOOM_ANIMATION_DURATION_MS,
+      fromPosition: camera.position.clone(),
+      toPosition: destinationPosition.clone(),
+      fromTarget: controls.target.clone(),
+      toTarget: destinationTarget.clone()
+    };
+  };
+
   const zoomToUserStar = (username: string) => {
     const camera = cameraRef.current;
     const controls = controlsRef.current;
@@ -147,9 +224,7 @@ function App() {
     const focusDistance = THREE.MathUtils.clamp(entry.baseSize * 2.2, MIN_CAMERA_DISTANCE + 2, 42);
     const cameraPosition = target.clone().add(viewDirection.multiplyScalar(-focusDistance));
 
-    camera.position.copy(cameraPosition);
-    controls.target.copy(target);
-    controls.update();
+    startCameraTransition(cameraPosition, target);
   };
 
   const handleUserSearch = () => {
@@ -209,6 +284,7 @@ function App() {
     controls.enabled = false;
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+    controls.zoomSpeed = 2.4;
     controls.rotateSpeed = 0.38;
     controls.minPolarAngle = 0.05;
     controls.maxPolarAngle = Math.PI - 0.05;
@@ -225,9 +301,18 @@ function App() {
     blueBackLight.position.set(75, 40, -120);
     scene.add(blueBackLight);
 
+    const moonTexture = createMoonTexture();
+
     const moon = new THREE.Mesh(
       new THREE.SphereGeometry(7.6, 48, 48),
-      new THREE.MeshStandardMaterial({ color: 0xd5e6ff, emissive: 0x3b66a8, emissiveIntensity: 0.35 })
+      new THREE.MeshStandardMaterial({
+        color: 0xd5e6ff,
+        map: moonTexture || undefined,
+        roughness: 0.94,
+        metalness: 0.03,
+        emissive: 0x3b66a8,
+        emissiveIntensity: 0.35
+      })
     );
     moon.position.copy(moonLight.position);
     scene.add(moon);
@@ -365,6 +450,7 @@ function App() {
       }
       setUserSearchFeedback('');
       setSelectedUserStar(selected.data);
+      zoomToUserStar(selected.data.username);
     };
 
     const handleCanvasMove = (event: MouseEvent) => {
@@ -509,6 +595,20 @@ function App() {
         }
       }
 
+      const zoomAnimation = zoomAnimationRef.current;
+      if (zoomAnimation?.active) {
+        const elapsed = performance.now() - zoomAnimation.startTime;
+        const progress = THREE.MathUtils.clamp(elapsed / zoomAnimation.duration, 0, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+
+        camera.position.lerpVectors(zoomAnimation.fromPosition, zoomAnimation.toPosition, eased);
+        controls.target.lerpVectors(zoomAnimation.fromTarget, zoomAnimation.toTarget, eased);
+
+        if (progress >= 1) {
+          zoomAnimation.active = false;
+        }
+      }
+
       controls.update();
       renderer.render(scene, camera);
     };
@@ -538,6 +638,10 @@ function App() {
 
       if (starTexture) {
         starTexture.dispose();
+      }
+
+      if (moonTexture) {
+        moonTexture.dispose();
       }
 
       renderer.dispose();
@@ -623,8 +727,15 @@ function App() {
       <section className="star-info-panel">
         {selectedUserStar ? (
           <>
-            <strong>{selectedUserStar.username}</strong>
-            <span>Stars: {selectedUserStar.star_count}</span>
+            <a
+              className="star-info-panel__username"
+              href={`https://github.com/${selectedUserStar.username}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              👤 {selectedUserStar.username}
+            </a>
+            <span>⭐ Stars: {selectedUserStar.star_count}</span>
           </>
         ) : (
           <span>Click a user star to view username and star count.</span>

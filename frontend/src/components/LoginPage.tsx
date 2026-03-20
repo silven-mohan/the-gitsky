@@ -72,14 +72,12 @@ function LoginPage() {
   return (
     <main className={styles['login-page']}>
       <section className={styles['login-card']}>
-        <h1>Authorize GitHub</h1>
-        <p>
-          Connect your GitHub account. The backend will fetch your total star count every 5 seconds and store
-          snapshots as JSON.
-        </p>
+        <h1>Sign in with GitHub</h1>
+        <p>Use your GitHub account to continue to The GitSky.</p>
 
         <div className={styles.actions}>
           <button
+            className={styles['github-button']}
             type="button"
             disabled={!isBackendConfigured}
             onClick={() => {
@@ -89,10 +87,8 @@ function LoginPage() {
               window.location.href = authorizeUrl;
             }}
           >
-            Authorize with GitHub
-          </button>
-          <button type="button" onClick={() => { window.location.href = '/world'; }}>
-            Back to World
+            <span aria-hidden="true">🐙</span>
+            Continue with GitHub
           </button>
         </div>
 
