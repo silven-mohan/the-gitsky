@@ -68,6 +68,55 @@ body,
   letter-spacing: 0.03em;
 }
 
+.world-card__search {
+  display: flex;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.world-card__search input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid rgb(128 170 214 / 40%);
+  border-radius: 999px;
+  background: rgb(4 17 38 / 84%);
+  color: #e4f0ff;
+  padding: 0.58rem 0.9rem;
+  font-size: 0.92rem;
+  outline: none;
+}
+
+.world-card__search input::placeholder {
+  color: #8d96a6;
+}
+
+.world-card__search input:focus {
+  border-color: rgb(187 227 255 / 62%);
+  box-shadow: 0 0 0 2px rgb(132 188 255 / 18%);
+}
+
+.world-card__search button {
+  border: 1px solid rgb(159 208 255 / 34%);
+  border-radius: 999px;
+  background: rgb(8 27 58 / 78%);
+  color: #e4f0ff;
+  padding: 0.58rem 1rem;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease;
+}
+
+.world-card__search button:hover {
+  background: rgb(11 34 74 / 92%);
+  border-color: rgb(187 227 255 / 62%);
+}
+
+.world-card__search-feedback {
+  margin: 0.55rem 0 0;
+  font-size: 0.84rem;
+  color: #f2c888;
+}
+
 .world-card__actions {
   display: flex;
   gap: 0.6rem;

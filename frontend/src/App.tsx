@@ -120,6 +120,31 @@ function App() {
   const controlsRef = useRef<any>(null);
   const [isCardOpen, setIsCardOpen] = useState(true);
   const [selectedUserStar, setSelectedUserStar] = useState<UserStar | null>(null);
+  const [availableUsers, setAvailableUsers] = useState<UserStar[]>([]);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userSearchFeedback, setUserSearchFeedback] = useState('');
+
+  const handleUserSearch = () => {
+    const trimmedQuery = userSearchQuery.trim();
+    if (!trimmedQuery) {
+      setUserSearchFeedback('Please enter a username to search.');
+      setSelectedUserStar(null);
+      return;
+    }
+
+    const foundUser = availableUsers.find(
+      (user) => user.username.toLowerCase() === trimmedQuery.toLowerCase()
+    );
+
+    if (!foundUser) {
+      setUserSearchFeedback(`No user found for "${trimmedQuery}".`);
+      setSelectedUserStar(null);
+      return;
+    }
+
+    setUserSearchFeedback('');
+    setSelectedUserStar(foundUser);
+  };
 
   useEffect(() => {
     const mount = canvasWrapRef.current;
@@ -260,20 +285,24 @@ function App() {
 
         const payload = (await response.json()) as UserStarsResponse;
         const users = Array.isArray(payload.users) ? payload.users : [];
+        const normalizedUsers = users.map((user) => ({
+          username: user.username,
+          star_count: Number(user.star_count) || 0
+        }));
+
+        setAvailableUsers(normalizedUsers);
 
         clearUserStars();
-        users.forEach((user, index) => {
+        normalizedUsers.forEach((user, index) => {
           createUserStarPoint(
-            {
-              username: user.username,
-              star_count: Number(user.star_count) || 0
-            },
+            user,
             index,
-            users.length
+            normalizedUsers.length
           );
         });
       } catch {
         // Silent failure keeps the world usable even when auth data is unavailable.
+        setAvailableUsers([]);
         setSelectedUserStar(null);
       }
     };
@@ -303,6 +332,7 @@ function App() {
       if (!selected) {
         return;
       }
+      setUserSearchFeedback('');
       setSelectedUserStar(selected.data);
     };
 
@@ -514,6 +544,28 @@ function App() {
       <div className="canvas-wrap is-visible" ref={canvasWrapRef} />
       <section className={`world-card ${!isCardOpen ? 'world-card--hidden' : ''}`}>
         <h2>The GitSky</h2>
+        <form
+          className="world-card__search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleUserSearch();
+          }}
+        >
+          <input
+            type="text"
+            value={userSearchQuery}
+            onChange={(event) => {
+              setUserSearchQuery(event.target.value);
+              if (userSearchFeedback) {
+                setUserSearchFeedback('');
+              }
+            }}
+            placeholder="enter the username.."
+            aria-label="Search user by username"
+          />
+          <button type="submit">Search</button>
+        </form>
+        {userSearchFeedback ? <p className="world-card__search-feedback">{userSearchFeedback}</p> : null}
         <div className="world-card__actions">
           <button type="button" onClick={() => { window.location.href = '/login'; }}>
             🔐 Login/Create
