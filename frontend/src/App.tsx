@@ -12,6 +12,9 @@ const MAX_CAMERA_DISTANCE = 260;
 const USER_STAR_MIN_SIZE = 8;
 const USER_STAR_MAX_SIZE = 30;
 const ZOOM_ANIMATION_DURATION_MS = 900;
+const MOON_TEXTURE_URL = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/lroc_color_poles_1k.jpg';
+const MOON_DISPLACEMENT_URL = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/ldem_3_8bit.jpg';
+const MOON_TEXTURE_CREDIT_URL = 'https://codepen.io/mustafakaytar/pens/';
 
 type UserStar = {
   username: string;
@@ -91,96 +94,6 @@ function createGlowStarTexture() {
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
   return texture;
-}
-
-function createMoonTexture() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 512;
-  const ctx = canvas.getContext('2d');
-
-  if (!ctx) {
-    return null;
-  }
-
-  const center = canvas.width / 2;
-  const baseGradient = ctx.createRadialGradient(center * 0.82, center * 0.78, 20, center, center, center * 1.05);
-  baseGradient.addColorStop(0, '#f4fbff');
-  baseGradient.addColorStop(0.42, '#cedef3');
-  baseGradient.addColorStop(1, '#8ea9c8');
-  ctx.fillStyle = baseGradient;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  for (let index = 0; index < 140; index += 1) {
-    const x = Math.random() * canvas.width;
-    const y = Math.random() * canvas.height;
-    const craterRadius = 4 + Math.random() * 26;
-
-    const crater = ctx.createRadialGradient(
-      x - craterRadius * 0.2,
-      y - craterRadius * 0.2,
-      craterRadius * 0.1,
-      x,
-      y,
-      craterRadius
-    );
-    crater.addColorStop(0, 'rgba(245, 253, 255, 0.22)');
-    crater.addColorStop(0.5, 'rgba(139, 168, 201, 0.18)');
-    crater.addColorStop(1, 'rgba(74, 95, 126, 0.02)');
-    ctx.fillStyle = crater;
-    ctx.beginPath();
-    ctx.arc(x, y, craterRadius, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.needsUpdate = true;
-  return texture;
-}
-
-function createMoonBumpTexture() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 512;
-  const ctx = canvas.getContext('2d');
-
-  if (!ctx) {
-    return null;
-  }
-
-  ctx.fillStyle = '#8c8c8c';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  for (let index = 0; index < 180; index += 1) {
-    const x = Math.random() * canvas.width;
-    const y = Math.random() * canvas.height;
-    const radius = 3 + Math.random() * 22;
-    const depth = Math.floor(110 + Math.random() * 110);
-
-    const crater = ctx.createRadialGradient(
-      x - radius * 0.25,
-      y - radius * 0.25,
-      radius * 0.15,
-      x,
-      y,
-      radius
-    );
-    crater.addColorStop(0, `rgb(${depth + 20}, ${depth + 20}, ${depth + 20})`);
-    crater.addColorStop(0.45, `rgb(${depth - 20}, ${depth - 20}, ${depth - 20})`);
-    crater.addColorStop(1, 'rgb(125, 125, 125)');
-    ctx.fillStyle = crater;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  const bumpTexture = new THREE.CanvasTexture(canvas);
-  bumpTexture.wrapS = THREE.RepeatWrapping;
-  bumpTexture.wrapT = THREE.RepeatWrapping;
-  bumpTexture.needsUpdate = true;
-  return bumpTexture;
 }
 
 function hashString(text: string) {
@@ -362,20 +275,24 @@ function App() {
     blueBackLight.position.set(75, 40, -120);
     scene.add(blueBackLight);
 
-    const moonTexture = createMoonTexture();
-    const moonBumpTexture = createMoonBumpTexture();
+    const textureLoader = new THREE.TextureLoader();
+    const moonTexture = textureLoader.load(MOON_TEXTURE_URL);
+    moonTexture.colorSpace = THREE.SRGBColorSpace;
+    const moonDisplacementTexture = textureLoader.load(MOON_DISPLACEMENT_URL);
 
     const moon = new THREE.Mesh(
-      new THREE.SphereGeometry(7.6, 48, 48),
+      new THREE.SphereGeometry(7.6, 64, 64),
       new THREE.MeshStandardMaterial({
-        color: 0xd5e6ff,
+        color: 0xffffff,
         map: moonTexture || undefined,
-        bumpMap: moonBumpTexture || undefined,
-        bumpScale: 0.55,
-        roughness: 0.94,
-        metalness: 0.03,
+        displacementMap: moonDisplacementTexture || undefined,
+        displacementScale: 0.2,
+        bumpMap: moonDisplacementTexture || undefined,
+        bumpScale: 0.09,
+        roughness: 0.96,
+        metalness: 0,
         emissive: 0x3b66a8,
-        emissiveIntensity: 0.35
+        emissiveIntensity: 0.2
       })
     );
     moon.position.copy(moonLight.position);
@@ -720,8 +637,8 @@ function App() {
         moonTexture.dispose();
       }
 
-      if (moonBumpTexture) {
-        moonBumpTexture.dispose();
+      if (moonDisplacementTexture) {
+        moonDisplacementTexture.dispose();
       }
 
       renderer.dispose();
@@ -815,6 +732,12 @@ function App() {
         <p>
           The GitSky turns GitHub users into stars orbiting a living moon. Search and click users to travel through
           their constellations, compare star counts, and explore the project as an interactive 3D universe.
+        </p>
+        <p className="project-description__credit">
+          Moon texture credit:
+          <a href={MOON_TEXTURE_CREDIT_URL} target="_blank" rel="noreferrer">
+            codepen.io/mustafakaytar/pens/
+          </a>
         </p>
       </section>
       {(selectedUserStar || isInitialStarHintVisible) && (
