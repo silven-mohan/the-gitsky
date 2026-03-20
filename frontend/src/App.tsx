@@ -265,16 +265,16 @@ function App() {
     controls.maxPolarAngle = Math.PI - 0.05;
     controls.target.set(0, 0, 0);
 
-    const moonLight = new THREE.PointLight(0xb6d1ff, 1.25, 500);
+    const moonLight = new THREE.PointLight(0xffffff, 1.2, 500);
     moonLight.position.set(0, 0, 0);
     scene.add(moonLight);
 
-    const skyFillLight = new THREE.HemisphereLight(0x6f9fff, 0x030910, 0.28);
+    const skyFillLight = new THREE.HemisphereLight(0xffffff, 0x0b0b0b, 0.22);
     scene.add(skyFillLight);
 
-    const blueBackLight = new THREE.DirectionalLight(0x4f8fff, 0.35);
-    blueBackLight.position.set(75, 40, -120);
-    scene.add(blueBackLight);
+    const backLight = new THREE.DirectionalLight(0xffffff, 0.24);
+    backLight.position.set(75, 40, -120);
+    scene.add(backLight);
 
     const textureLoader = new THREE.TextureLoader();
     const tiffLoader = new TIFFLoader();
@@ -293,8 +293,8 @@ function App() {
         bumpScale: 0.09,
         roughness: 0.96,
         metalness: 0,
-        emissive: 0x3b66a8,
-        emissiveIntensity: 0.2
+        emissive: 0x111111,
+        emissiveIntensity: 0.05
       })
     );
     moon.position.copy(moonLight.position);
