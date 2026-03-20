@@ -15,7 +15,6 @@ const USER_STAR_MAX_SIZE = 30;
 const ZOOM_ANIMATION_DURATION_MS = 900;
 const MOON_TEXTURE_URL = '/textures/lroc_color_poles_4k.tif';
 const MOON_DISPLACEMENT_URL = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/ldem_3_8bit.jpg';
-const MOON_TEXTURE_CREDIT_URL = 'https://codepen.io/mustafakaytar/pens/';
 
 type UserStar = {
   username: string;
@@ -734,12 +733,6 @@ function App() {
         <p>
           The GitSky turns GitHub users into stars orbiting a living moon. Search and click users to travel through
           their constellations, compare star counts, and explore the project as an interactive 3D universe.
-        </p>
-        <p className="project-description__credit">
-          Moon texture credit:
-          <a href={MOON_TEXTURE_CREDIT_URL} target="_blank" rel="noreferrer">
-            codepen.io/mustafakaytar/pens/
-          </a>
         </p>
       </section>
       {(selectedUserStar || isInitialStarHintVisible) && (
