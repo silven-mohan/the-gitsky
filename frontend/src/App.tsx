@@ -118,8 +118,8 @@ function getStarPosition(username: string, index: number, total: number) {
 function App() {
   const canvasWrapRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<any>(null);
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const userStarEntriesRef = useRef<Array<{ data: UserStar; baseSize: number; points: THREE.Points }>>([]);
+  const cameraRef = useRef<any>(null);
+  const userStarEntriesRef = useRef<Array<{ data: UserStar; baseSize: number; points: any }>>([]);
   const [isCardOpen, setIsCardOpen] = useState(true);
   const [selectedUserStar, setSelectedUserStar] = useState<UserStar | null>(null);
   const [availableUsers, setAvailableUsers] = useState<UserStar[]>([]);
@@ -252,7 +252,7 @@ function App() {
       basePosition: any;
       twinkleOffset: number;
     }> = [];
-    userStarEntriesRef.current = userStarEntries as Array<{ data: UserStar; baseSize: number; points: THREE.Points }>;
+    userStarEntriesRef.current = userStarEntries as Array<{ data: UserStar; baseSize: number; points: any }>;
 
     const clearUserStars = () => {
       for (let index = userStarEntries.length - 1; index >= 0; index -= 1) {
