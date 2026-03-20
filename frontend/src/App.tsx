@@ -216,6 +216,7 @@ function App() {
   const [availableUsers, setAvailableUsers] = useState<UserStar[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userSearchFeedback, setUserSearchFeedback] = useState('');
+  const [isInitialStarHintVisible, setIsInitialStarHintVisible] = useState(true);
   const [isMoonDescriptionVisible, setIsMoonDescriptionVisible] = useState(false);
   const moonDescriptionVisibleRef = useRef(false);
 
@@ -755,6 +756,12 @@ function App() {
     controls.enableZoom = isOrbitEnabled;
   }, [isCardOpen]);
 
+  useEffect(() => {
+    if (selectedUserStar && isInitialStarHintVisible) {
+      setIsInitialStarHintVisible(false);
+    }
+  }, [selectedUserStar, isInitialStarHintVisible]);
+
   return (
     <main className="page">
       <div className="canvas-wrap is-visible" ref={canvasWrapRef} />
@@ -810,23 +817,25 @@ function App() {
           their constellations, compare star counts, and explore the project as an interactive 3D universe.
         </p>
       </section>
-      <section className="star-info-panel">
-        {selectedUserStar ? (
-          <>
-            <a
-              className="star-info-panel__username"
-              href={`https://github.com/${selectedUserStar.username}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              👤 {selectedUserStar.username}
-            </a>
-            <span>⭐ Stars: {selectedUserStar.star_count}</span>
-          </>
-        ) : (
-          <span>Click a user star to view username and star count.</span>
-        )}
-      </section>
+      {(selectedUserStar || isInitialStarHintVisible) && (
+        <section className="star-info-panel">
+          {selectedUserStar ? (
+            <>
+              <a
+                className="star-info-panel__username"
+                href={`https://github.com/${selectedUserStar.username}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                👤 {selectedUserStar.username}
+              </a>
+              <span>⭐ Stars: {selectedUserStar.star_count}</span>
+            </>
+          ) : (
+            <span>Click a user star to view username and star count.</span>
+          )}
+        </section>
+      )}
     </main>
   );
 }
