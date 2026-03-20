@@ -118,11 +118,39 @@ function getStarPosition(username: string, index: number, total: number) {
 function App() {
   const canvasWrapRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<any>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const userStarEntriesRef = useRef<Array<{ data: UserStar; baseSize: number; points: THREE.Points }>>([]);
   const [isCardOpen, setIsCardOpen] = useState(true);
   const [selectedUserStar, setSelectedUserStar] = useState<UserStar | null>(null);
   const [availableUsers, setAvailableUsers] = useState<UserStar[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userSearchFeedback, setUserSearchFeedback] = useState('');
+
+  const zoomToUserStar = (username: string) => {
+    const camera = cameraRef.current;
+    const controls = controlsRef.current;
+    const entries = userStarEntriesRef.current;
+
+    if (!camera || !controls || entries.length === 0) {
+      return;
+    }
+
+    const entry = entries.find((item) => item.data.username.toLowerCase() === username.toLowerCase());
+    if (!entry) {
+      return;
+    }
+
+    const target = entry.points.position.clone();
+    const viewDirection = new THREE.Vector3();
+    camera.getWorldDirection(viewDirection);
+
+    const focusDistance = THREE.MathUtils.clamp(entry.baseSize * 2.2, MIN_CAMERA_DISTANCE + 2, 42);
+    const cameraPosition = target.clone().add(viewDirection.multiplyScalar(-focusDistance));
+
+    camera.position.copy(cameraPosition);
+    controls.target.copy(target);
+    controls.update();
+  };
 
   const handleUserSearch = () => {
     const trimmedQuery = userSearchQuery.trim();
@@ -144,6 +172,7 @@ function App() {
 
     setUserSearchFeedback('');
     setSelectedUserStar(foundUser);
+    zoomToUserStar(foundUser.username);
   };
 
   useEffect(() => {
@@ -163,6 +192,7 @@ function App() {
       1200
     );
     camera.position.set(0, 0, 120);
+    cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(mount.clientWidth, mount.clientHeight);
@@ -222,6 +252,7 @@ function App() {
       basePosition: any;
       twinkleOffset: number;
     }> = [];
+    userStarEntriesRef.current = userStarEntries as Array<{ data: UserStar; baseSize: number; points: THREE.Points }>;
 
     const clearUserStars = () => {
       for (let index = userStarEntries.length - 1; index >= 0; index -= 1) {
@@ -500,6 +531,8 @@ function App() {
 
       controls.dispose();
       controlsRef.current = null;
+      cameraRef.current = null;
+      userStarEntriesRef.current = [];
       starGeometry.dispose();
       starsMaterial.dispose();
 
@@ -560,7 +593,7 @@ function App() {
                 setUserSearchFeedback('');
               }
             }}
-            placeholder="enter the username.."
+            placeholder="Enter the username.."
             aria-label="Search user by username"
           />
           <button type="submit">Search</button>
