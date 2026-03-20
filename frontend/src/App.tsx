@@ -140,6 +140,49 @@ function createMoonTexture() {
   return texture;
 }
 
+function createMoonBumpTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    return null;
+  }
+
+  ctx.fillStyle = '#8c8c8c';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (let index = 0; index < 180; index += 1) {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    const radius = 3 + Math.random() * 22;
+    const depth = Math.floor(110 + Math.random() * 110);
+
+    const crater = ctx.createRadialGradient(
+      x - radius * 0.25,
+      y - radius * 0.25,
+      radius * 0.15,
+      x,
+      y,
+      radius
+    );
+    crater.addColorStop(0, `rgb(${depth + 20}, ${depth + 20}, ${depth + 20})`);
+    crater.addColorStop(0.45, `rgb(${depth - 20}, ${depth - 20}, ${depth - 20})`);
+    crater.addColorStop(1, 'rgb(125, 125, 125)');
+    ctx.fillStyle = crater;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const bumpTexture = new THREE.CanvasTexture(canvas);
+  bumpTexture.wrapS = THREE.RepeatWrapping;
+  bumpTexture.wrapT = THREE.RepeatWrapping;
+  bumpTexture.needsUpdate = true;
+  return bumpTexture;
+}
+
 function hashString(text: string) {
   let hash = 0;
   for (let index = 0; index < text.length; index += 1) {
@@ -302,12 +345,15 @@ function App() {
     scene.add(blueBackLight);
 
     const moonTexture = createMoonTexture();
+    const moonBumpTexture = createMoonBumpTexture();
 
     const moon = new THREE.Mesh(
       new THREE.SphereGeometry(7.6, 48, 48),
       new THREE.MeshStandardMaterial({
         color: 0xd5e6ff,
         map: moonTexture || undefined,
+        bumpMap: moonBumpTexture || undefined,
+        bumpScale: 0.55,
         roughness: 0.94,
         metalness: 0.03,
         emissive: 0x3b66a8,
@@ -443,14 +489,31 @@ function App() {
       return entry || null;
     };
 
+    const pickMoon = (clientX: number, clientY: number) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      const moonHit = raycaster.intersectObject(moon, false);
+      return moonHit.length > 0;
+    };
+
     const handleCanvasClick = (event: MouseEvent) => {
       const selected = pickUserStar(event.clientX, event.clientY);
-      if (!selected) {
+      if (selected) {
+        setUserSearchFeedback('');
+        setSelectedUserStar(selected.data);
+        zoomToUserStar(selected.data.username);
         return;
       }
+
+      const clickedMoon = pickMoon(event.clientX, event.clientY);
+      if (clickedMoon) {
+        zoomAnimationRef.current = null;
+      }
+
       setUserSearchFeedback('');
-      setSelectedUserStar(selected.data);
-      zoomToUserStar(selected.data.username);
+      setSelectedUserStar(null);
     };
 
     const handleCanvasMove = (event: MouseEvent) => {
@@ -642,6 +705,10 @@ function App() {
 
       if (moonTexture) {
         moonTexture.dispose();
+      }
+
+      if (moonBumpTexture) {
+        moonBumpTexture.dispose();
       }
 
       renderer.dispose();
