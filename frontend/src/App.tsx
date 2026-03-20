@@ -216,6 +216,8 @@ function App() {
   const [availableUsers, setAvailableUsers] = useState<UserStar[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userSearchFeedback, setUserSearchFeedback] = useState('');
+  const [isMoonDescriptionVisible, setIsMoonDescriptionVisible] = useState(false);
+  const moonDescriptionVisibleRef = useRef(false);
 
   const zoomAnimationRef = useRef<{
     active: boolean;
@@ -268,6 +270,21 @@ function App() {
     const cameraPosition = target.clone().add(viewDirection.multiplyScalar(-focusDistance));
 
     startCameraTransition(cameraPosition, target);
+  };
+
+  const resetFocusToCenter = () => {
+    const camera = cameraRef.current;
+    const controls = controlsRef.current;
+
+    if (!camera || !controls) {
+      return;
+    }
+
+    const center = new THREE.Vector3(0, 0, 0);
+    const cameraOffset = camera.position.clone().sub(controls.target);
+    const destinationPosition = center.clone().add(cameraOffset);
+
+    startCameraTransition(destinationPosition, center);
   };
 
   const handleUserSearch = () => {
@@ -489,15 +506,6 @@ function App() {
       return entry || null;
     };
 
-    const pickMoon = (clientX: number, clientY: number) => {
-      const rect = renderer.domElement.getBoundingClientRect();
-      pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
-      pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera(pointer, camera);
-      const moonHit = raycaster.intersectObject(moon, false);
-      return moonHit.length > 0;
-    };
-
     const handleCanvasClick = (event: MouseEvent) => {
       const selected = pickUserStar(event.clientX, event.clientY);
       if (selected) {
@@ -507,10 +515,7 @@ function App() {
         return;
       }
 
-      const clickedMoon = pickMoon(event.clientX, event.clientY);
-      if (clickedMoon) {
-        zoomAnimationRef.current = null;
-      }
+      resetFocusToCenter();
 
       setUserSearchFeedback('');
       setSelectedUserStar(null);
@@ -672,6 +677,13 @@ function App() {
         }
       }
 
+      const moonDistance = camera.position.distanceTo(moon.position);
+      const shouldShowMoonDescription = moonDistance <= MIN_CAMERA_DISTANCE + 0.7;
+      if (shouldShowMoonDescription !== moonDescriptionVisibleRef.current) {
+        moonDescriptionVisibleRef.current = shouldShowMoonDescription;
+        setIsMoonDescriptionVisible(shouldShowMoonDescription);
+      }
+
       controls.update();
       renderer.render(scene, camera);
     };
@@ -791,6 +803,13 @@ function App() {
       >
         ˅
       </button>
+      <section className={`project-description ${isMoonDescriptionVisible ? 'project-description--visible' : ''}`}>
+        <h3>The GitSky</h3>
+        <p>
+          The GitSky turns GitHub users into stars orbiting a living moon. Search and click users to travel through
+          their constellations, compare star counts, and explore the project as an interactive 3D universe.
+        </p>
+      </section>
       <section className="star-info-panel">
         {selectedUserStar ? (
           <>
