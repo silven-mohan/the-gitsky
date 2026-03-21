@@ -820,8 +820,8 @@ function App() {
             Backend: Node.js + Express API with GitHub OAuth integration and Supabase-backed storage.
           </p>
           <p>
-            Hosting and deployment: frontend deployment-ready through Vercel configuration, backend designed to run as a
-            standalone Node service with environment-based configuration.
+            Hosting and deployment: frontend deployment-ready through Vercel configuration, backend hosted on Render with
+            environment-based configuration.
           </p>
           <p>
             Languages and standards: TypeScript and JavaScript (ES modules), CSS with a space-themed visual layer,

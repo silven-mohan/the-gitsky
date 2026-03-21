@@ -23,6 +23,8 @@
   border: 1px solid rgb(148 201 255 / 48%);
   background: linear-gradient(180deg, rgb(21 43 89 / 86%), rgb(7 19 43 / 86%));
   color: #e9f3ff;
+  font-family: 'Orbitron', sans-serif;
+  font-optical-sizing: auto;
   font-size: 1rem;
   font-weight: 600;
   letter-spacing: 0.03em;

@@ -305,12 +305,16 @@ body,
 }
 
 .moon-landing__description h4 {
-  margin: 1.15rem 0 0;
+  margin: 2rem 0 0;
   font-size: 0.94rem;
   line-height: 1.5;
   letter-spacing: 0.03em;
   color: #ffffff;
   font-weight: 800;
+}
+
+.moon-landing__description h4:first-of-type {
+  margin-top: 1rem;
 }
 
 .moon-landing__description p {
