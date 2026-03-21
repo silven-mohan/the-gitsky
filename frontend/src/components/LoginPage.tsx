@@ -99,6 +99,20 @@ function LoginPage() {
           {typeof me?.star_count === 'number' && <span>Stars: {me.star_count}</span>}
           {error && <span>Error: {error}</span>}
         </div>
+
+        <section className={styles.policies} aria-label="Privacy and guidelines">
+          <h2>Privacy and Guidelines</h2>
+          <p>
+            By continuing, you authorize The GitSky to read your public GitHub profile and repository metadata needed to
+            compute star counts. We do not request write access to your repositories.
+          </p>
+          <ul>
+            <li>Only public GitHub data required for app features is processed.</li>
+            <li>Authentication is handled through GitHub OAuth and secured with JWT.</li>
+            <li>Do not share tokens or impersonate other users.</li>
+            <li>Use the platform respectfully and in compliance with GitHub terms.</li>
+          </ul>
+        </section>
       </section>
     </main>
   );
