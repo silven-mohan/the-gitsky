@@ -193,7 +193,7 @@ body,
 
 .moon-landing--visible {
   opacity: 1;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .star-info-panel {

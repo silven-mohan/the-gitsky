@@ -670,10 +670,10 @@ function App() {
       return;
     }
 
-    const isOrbitEnabled = !isCardOpen;
+    const isOrbitEnabled = !isCardOpen || isMoonLandingVisible;
     controls.enabled = isOrbitEnabled;
     controls.enableZoom = isOrbitEnabled;
-  }, [isCardOpen]);
+  }, [isCardOpen, isMoonLandingVisible]);
 
   useEffect(() => {
     if (selectedUserStar && isInitialStarHintVisible) {
