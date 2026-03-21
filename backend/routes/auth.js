@@ -12,7 +12,10 @@ const router = Router();
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || '';
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || '';
 const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL || '';
-const FRONTEND_URL = process.env.FRONTEND_URL || '';
+const CANONICAL_FRONTEND_URL = 'https://www.thegitsky.me';
+const frontendUrlFromEnv = (process.env.FRONTEND_URL || '').trim();
+const FRONTEND_URL =
+  !frontendUrlFromEnv || frontendUrlFromEnv.includes('vercel.app') ? CANONICAL_FRONTEND_URL : frontendUrlFromEnv;
 const JWT_SECRET = process.env.JWT_SECRET || '';
 
 router.get('/github', async (_req, res) => {
