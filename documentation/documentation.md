@@ -125,9 +125,6 @@ backend/
 |  |- githubService.js
 |  |- supabaseClient.js
 |  `- supabaseService.js
-`- data/
-   |- latest-stars.json
-   `- star-history.json
 ```
 
 ### Backend runtime flow
@@ -175,13 +172,6 @@ backend/
   - Moon surface texture (loaded in Three.js using TIFF loader).
 - `frontend/public/textures/moon.jpg`
   - Landing overlay image shown near moon zoom threshold.
-
-### Backend data snapshots
-
-- `backend/data/latest-stars.json`
-- `backend/data/star-history.json`
-
-These appear to be data artifacts/snapshots and are not part of live route wiring in the current runtime path.
 
 ## 6. Dependency and Tooling Profile
 

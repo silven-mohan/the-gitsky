@@ -69,9 +69,6 @@ the-gitsky/
     |   |-- githubService.js
     |   |-- supabaseClient.js
     |   `-- supabaseService.js
-    `-- data/
-        |-- latest-stars.json
-        `-- star-history.json
 ```
 
 ## Generated And Ignored Artifacts
