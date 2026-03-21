@@ -775,7 +775,7 @@ function App() {
         <div className="moon-landing__description">
           <h3>The GitSky Mission Log 🌌</h3>
 
-          <h4>1. Description 🚀</h4>
+          <h4>🚀 Description</h4>
           <p>
             The GitSky is an interactive space narrative where GitHub users become stars inside a live 3D universe.
             Instead of treating contribution data like plain numbers in a table, this experience turns developer activity
@@ -790,7 +790,7 @@ function App() {
             itself in a calm, focused frame.
           </p>
 
-          <h4>2. Tech Stack 🛠️</h4>
+          <h4>🛠️ Tech Stack</h4>
           <p>
             Frontend: React + TypeScript + Vite with a Three.js world renderer for the immersive scene.
           </p>
@@ -806,7 +806,7 @@ function App() {
             REST-style endpoints, and JWT-based auth flow for protected API routes.
           </p>
 
-          <h4>3. Additional Details 🛰️</h4>
+          <h4>🛰️ Additional Details</h4>
           <p>
             The experience intentionally balances aesthetics with performance. Star rendering uses particle systems,
             additive blending, and lightweight animation patterns to keep motion rich while preserving responsiveness.
@@ -826,7 +826,7 @@ function App() {
           </p>
 
           <div className="moon-landing__made-with" aria-label="Made with heart and sparkles">
-            <span>4. Made with ✨</span>
+            <span>✨ Made with</span>
             <span className="moon-landing__heart" role="img" aria-label="Grey heart">
               🩶
             </span>
