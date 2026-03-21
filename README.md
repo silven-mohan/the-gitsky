@@ -4,7 +4,7 @@ Interactive main-page night sky built with ThreeJS on a modern Vite + React + Ty
 
 ## Project structure
 
-See the full tree and structure notes in [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md).
+See the full tree and structure notes in [documentation/PROJECT_STRUCTURE.md](documentation/PROJECT_STRUCTURE.md).
 
 ## Quick start
 

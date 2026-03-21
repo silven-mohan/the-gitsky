@@ -16,8 +16,10 @@ The backend exposes auth and API endpoints with JWT-based protected routes.
 the-gitsky/
 |- LICENSE
 |- README.md
-|- PROJECT_STRUCTURE.md
 |- .gitignore
+|- documentation/
+|  |- documentation.md
+|  `- PROJECT_STRUCTURE.md
 |- frontend/
 |- backend/
 ```
@@ -25,7 +27,7 @@ the-gitsky/
 ### Top-level responsibility map
 
 - `README.md`: setup, quick start, and credits.
-- `PROJECT_STRUCTURE.md`: concise current tree snapshot.
+- `documentation/PROJECT_STRUCTURE.md`: concise current tree snapshot.
 - `.gitignore`: build/cache/environment exclusions.
 - `frontend/`: UI app, static assets, build tooling.
 - `backend/`: API server, auth logic, integrations.

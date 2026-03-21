@@ -45,9 +45,10 @@ type ShootingStar = {
   age: number;
 };
 function mapStarCountToSize(starCount: number) {
-  // Log scaling keeps extreme star counts visually balanced while preserving growth.
+  // Emphasize mid-range differences while keeping high counts from dominating.
   const safeCount = Math.max(0, starCount);
-  const normalized = THREE.MathUtils.clamp(Math.log10(safeCount + 1) / 4, 0, 1);
+  const normalizedLog = THREE.MathUtils.clamp(Math.log10(safeCount + 1) / 3, 0, 1);
+  const normalized = Math.pow(normalizedLog, 1.15);
   return THREE.MathUtils.lerp(USER_STAR_MIN_SIZE, USER_STAR_MAX_SIZE, normalized);
 }
 
