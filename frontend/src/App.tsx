@@ -792,8 +792,10 @@ function App() {
             <button type="button" className="moon-landing__back" onClick={exitMoonLanding} aria-label="Exit description">
               ←
             </button>
-            <h3>The GitSky Mission Log 🌌</h3>
           </div>
+
+          <div className="moon-landing__divider" />
+          <h3 className="moon-landing__emoji-heading">🌌 The GitSky Mission Log</h3>
 
           <h4>🚀 Description</h4>
           <p>
@@ -845,6 +847,7 @@ function App() {
             </a>
           </p>
 
+          <div className="moon-landing__divider moon-landing__divider--footer" />
           <div className="moon-landing__made-with" aria-label="Made with heart and sparkles">
             <span>Made with love</span>
             <span className="moon-landing__heart" role="img" aria-label="Grey heart">

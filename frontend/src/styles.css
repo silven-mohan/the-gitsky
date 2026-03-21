@@ -259,7 +259,23 @@ body,
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.8rem;
+  gap: 0;
+}
+
+.moon-landing__divider {
+  width: 100%;
+  height: 1px;
+  margin: 0.72rem 0 0.9rem;
+  background: linear-gradient(90deg, rgb(196 205 219 / 14%), rgb(223 230 241 / 58%), rgb(196 205 219 / 14%));
+}
+
+.moon-landing__divider--footer {
+  margin-top: 1.25rem;
+  margin-bottom: 0.8rem;
+}
+
+.moon-landing__emoji-heading {
+  margin: 0;
 }
 
 .moon-landing__back {
@@ -317,9 +333,8 @@ body,
 }
 
 .moon-landing__made-with {
-  margin-top: 1.2rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid rgb(184 193 209 / 26%);
+  margin-top: 0;
+  padding-top: 0;
   display: flex;
   align-items: center;
   justify-content: center;
