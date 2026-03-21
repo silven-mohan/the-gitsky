@@ -2,7 +2,8 @@
   position: fixed;
   inset: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
   overflow: hidden;
   background: #000;
   transform: scale(1);
@@ -19,7 +20,8 @@
 .videoViewport {
   position: relative;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
   overflow: hidden;
 }
 
@@ -35,4 +37,17 @@
 
 .pointer-events-none {
   pointer-events: none;
+}
+
+@media (max-width: 1024px) {
+  .root,
+  .videoViewport {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+
+  .videoFrame {
+    width: 140%;
+    height: 140%;
+  }
 }
