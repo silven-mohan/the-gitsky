@@ -188,12 +188,75 @@ body,
   object-fit: cover;
   display: block;
   transform: scale(1.03);
-  filter: saturate(1.08) contrast(1.04);
+  filter: saturate(0.86) contrast(1.06) brightness(0.86);
 }
 
 .moon-landing--visible {
   opacity: 1;
   pointer-events: none;
+}
+
+.moon-discovery-hint {
+  position: absolute;
+  z-index: 5;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgb(176 184 196 / 46%);
+  border-radius: 999px;
+  padding: 0.42rem 0.78rem;
+  background: linear-gradient(180deg, rgb(47 53 62 / 90%), rgb(24 28 35 / 90%));
+  color: #e2e7ee;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 45%), 0 0 18px rgb(203 212 224 / 16%);
+  transition: opacity 320ms ease;
+}
+
+.moon-discovery-hint--visible {
+  opacity: 1;
+  animation: moon-discovery-float 2.8s ease-in-out infinite;
+}
+
+.moon-landing__description {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(1rem, 4vw, 2rem);
+  transform: translateX(-50%);
+  width: min(760px, calc(100vw - 2rem));
+  border: 1px solid rgb(165 174 189 / 45%);
+  border-radius: 16px;
+  padding: 0.95rem 1.05rem;
+  background: linear-gradient(180deg, rgb(43 49 58 / 86%), rgb(20 24 31 / 86%));
+  color: #dde3ec;
+  backdrop-filter: blur(7px);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 46%), 0 0 26px rgb(151 160 176 / 20%);
+}
+
+.moon-landing__description h3 {
+  margin: 0;
+  font-size: clamp(1rem, 2.8vw, 1.25rem);
+  letter-spacing: 0.03em;
+  color: #f0f3f8;
+}
+
+.moon-landing__description p {
+  margin: 0.45rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #d2d9e5;
+}
+
+@keyframes moon-discovery-float {
+  0% {
+    transform: translate(-50%, -50%) translateY(0);
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(-8px);
+  }
+  100% {
+    transform: translate(-50%, -50%) translateY(0);
+  }
 }
 
 .star-info-panel {

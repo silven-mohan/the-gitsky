@@ -13,6 +13,7 @@ const MAX_CAMERA_DISTANCE = 260;
 const USER_STAR_MIN_SIZE = 8;
 const USER_STAR_MAX_SIZE = 30;
 const ZOOM_ANIMATION_DURATION_MS = 900;
+const MOON_HINT_DELAY_MS = 2 * 60 * 1000;
 const MOON_TEXTURE_URL = '/textures/lroc_color_poles_4k.tif';
 const MOON_LANDING_IMAGE_URL = '/textures/moon.jpg';
 const MOON_DISPLACEMENT_URL = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/ldem_3_8bit.jpg';
@@ -122,6 +123,7 @@ function getStarPosition(username: string, index: number, total: number) {
 
 function App() {
   const canvasWrapRef = useRef<HTMLDivElement | null>(null);
+  const moonHintRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<any>(null);
   const cameraRef = useRef<any>(null);
   const userStarEntriesRef = useRef<Array<{ data: UserStar; baseSize: number; points: any }>>([]);
@@ -131,8 +133,11 @@ function App() {
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userSearchFeedback, setUserSearchFeedback] = useState('');
   const [isInitialStarHintVisible, setIsInitialStarHintVisible] = useState(true);
+  const [isMoonHintVisible, setIsMoonHintVisible] = useState(false);
   const [isMoonLandingVisible, setIsMoonLandingVisible] = useState(false);
   const moonLandingVisibleRef = useRef(false);
+  const hasDiscoveredMoonLandingRef = useRef(false);
+  const moonHintVisibleRef = useRef(false);
 
   const zoomAnimationRef = useRef<{
     active: boolean;
@@ -224,6 +229,22 @@ function App() {
     setSelectedUserStar(foundUser);
     zoomToUserStar(foundUser.username);
   };
+
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      if (!hasDiscoveredMoonLandingRef.current) {
+        setIsMoonHintVisible(true);
+      }
+    }, MOON_HINT_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, []);
+
+  useEffect(() => {
+    moonHintVisibleRef.current = isMoonHintVisible;
+  }, [isMoonHintVisible]);
 
   useEffect(() => {
     const mount = canvasWrapRef.current;
@@ -604,6 +625,20 @@ function App() {
         setIsMoonLandingVisible(shouldShowMoonLanding);
       }
 
+      if (shouldShowMoonLanding && !hasDiscoveredMoonLandingRef.current) {
+        hasDiscoveredMoonLandingRef.current = true;
+        setIsMoonHintVisible(false);
+      }
+
+      if (moonHintRef.current && moonHintVisibleRef.current && !shouldShowMoonLanding) {
+        const hintPosition = moon.position.clone().project(camera);
+        const hintX = (hintPosition.x * 0.5 + 0.5) * mount.clientWidth;
+        const hintY = (-hintPosition.y * 0.5 + 0.5) * mount.clientHeight - 96;
+
+        moonHintRef.current.style.left = `${hintX.toFixed(1)}px`;
+        moonHintRef.current.style.top = `${hintY.toFixed(1)}px`;
+      }
+
       controls.update();
       renderer.render(scene, camera);
     };
@@ -729,8 +764,21 @@ function App() {
       >
         ˅
       </button>
+      <div
+        ref={moonHintRef}
+        className={`moon-discovery-hint ${isMoonHintVisible && !isMoonLandingVisible ? 'moon-discovery-hint--visible' : ''}`}
+      >
+        Zoom in to reveal the project story.
+      </div>
       <section className={`moon-landing ${isMoonLandingVisible ? 'moon-landing--visible' : ''}`}>
         <img src={MOON_LANDING_IMAGE_URL} alt="Moon landing" />
+        <div className="moon-landing__description">
+          <h3>The GitSky</h3>
+          <p>
+            The GitSky maps GitHub users into a living constellation where each star reflects real repository impact.
+            Search for a username, jump across stellar clusters, and explore the project from orbit down to the moon.
+          </p>
+        </div>
       </section>
       {(selectedUserStar || isInitialStarHintVisible) && !isMoonLandingVisible && (
         <section className="star-info-panel">
