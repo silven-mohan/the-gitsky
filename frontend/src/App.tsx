@@ -717,11 +717,27 @@ function App() {
 
   useEffect(() => {
     const controls = controlsRef.current;
+    const camera = cameraRef.current;
     if (!controls) {
       return;
     }
 
-    const isOrbitEnabled = !isCardOpen && !isMoonLandingVisible;
+    if (!camera) {
+      return;
+    }
+
+    if (isMoonLandingVisible) {
+      const lockedDistance = camera.position.distanceTo(controls.target);
+      controls.enabled = false;
+      controls.enableZoom = false;
+      controls.minDistance = lockedDistance;
+      controls.maxDistance = lockedDistance;
+      return;
+    }
+
+    controls.minDistance = MIN_CAMERA_DISTANCE;
+    controls.maxDistance = MAX_CAMERA_DISTANCE;
+    const isOrbitEnabled = !isCardOpen;
     controls.enabled = isOrbitEnabled;
     controls.enableZoom = isOrbitEnabled;
   }, [isCardOpen, isMoonLandingVisible]);
