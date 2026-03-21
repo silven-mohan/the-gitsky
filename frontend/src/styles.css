@@ -178,8 +178,9 @@ body,
   inset: 0;
   z-index: 4;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 360ms ease;
+  transition: opacity 360ms ease, visibility 0ms linear 360ms;
 }
 
 .moon-landing img {
@@ -193,7 +194,9 @@ body,
 
 .moon-landing--visible {
   opacity: 1;
+  visibility: visible;
   pointer-events: none;
+  transition: opacity 360ms ease;
 }
 
 .moon-discovery-hint {
@@ -233,6 +236,10 @@ body,
   color: #dde3ec;
   backdrop-filter: blur(6px);
   box-shadow: 0 14px 34px rgb(0 0 0 / 38%), 0 0 26px rgb(151 160 176 / 15%);
+  pointer-events: none;
+}
+
+.moon-landing--visible .moon-landing__description {
   pointer-events: auto;
 }
 
