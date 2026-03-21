@@ -773,11 +773,67 @@ function App() {
       <section className={`moon-landing ${isMoonLandingVisible ? 'moon-landing--visible' : ''}`}>
         <img src={MOON_LANDING_IMAGE_URL} alt="Moon landing" />
         <div className="moon-landing__description">
-          <h3>The GitSky</h3>
+          <h3>The GitSky Mission Log</h3>
+
+          <h4>1. Description</h4>
           <p>
-            The GitSky maps GitHub users into a living constellation where each star reflects real repository impact.
-            Search for a username, jump across stellar clusters, and explore the project from orbit down to the moon.
+            The GitSky is an interactive space narrative where GitHub users become stars inside a live 3D universe.
+            Instead of treating contribution data like plain numbers in a table, this experience turns developer activity
+            into motion, light, and distance. Each star is positioned as part of a constellation field, and each orbit
+            through the scene tells a different story about exploration, curiosity, and open-source impact.
           </p>
+          <p>
+            At its core, the world is designed to feel both playful and informative: you can search for users, zoom into
+            their stars, compare presence in the sky, then re-center and keep traveling. The moon serves as the anchor of
+            the universe and becomes a narrative landing surface once discovered. This is where the project shifts from
+            data visualization to storytelling: the interface pauses, the atmosphere settles, and the project introduces
+            itself in a calm, focused frame.
+          </p>
+
+          <h4>2. Tech Stack</h4>
+          <p>
+            Frontend: React + TypeScript + Vite with a Three.js world renderer for the immersive scene.
+          </p>
+          <p>
+            Backend: Node.js + Express API with GitHub OAuth integration and Supabase-backed storage.
+          </p>
+          <p>
+            Hosting and deployment: frontend deployment-ready through Vercel configuration, backend designed to run as a
+            standalone Node service with environment-based configuration.
+          </p>
+          <p>
+            Languages and standards: TypeScript and JavaScript (ES modules), CSS with a space-themed visual layer,
+            REST-style endpoints, and JWT-based auth flow for protected API routes.
+          </p>
+
+          <h4>3. Additional Details</h4>
+          <p>
+            The experience intentionally balances aesthetics with performance. Star rendering uses particle systems,
+            additive blending, and lightweight animation patterns to keep motion rich while preserving responsiveness.
+            Camera transitions are eased to feel cinematic rather than abrupt, and zoom boundaries protect the user from
+            clipping through scene objects.
+          </p>
+          <p>
+            The world includes delayed guidance for discovery, contextual info panels, and an approachable interaction
+            model where users can either search directly or navigate freely through orbit controls. The scene remains
+            functional even when external data is unavailable, ensuring graceful fallback behavior during API issues.
+          </p>
+          <p>
+            Codebase link:
+            <a href="https://github.com/silven-mohan/the-gitsky" target="_blank" rel="noreferrer">
+              https://github.com/silven-mohan/the-gitsky
+            </a>
+          </p>
+
+          <div className="moon-landing__made-with" aria-label="Made with heart and sparkles">
+            <span>4. Made with</span>
+            <span className="moon-landing__heart" role="img" aria-label="Grey heart">
+              🩶
+            </span>
+            <span className="moon-landing__sparkle moon-landing__sparkle--1">✦</span>
+            <span className="moon-landing__sparkle moon-landing__sparkle--2">✧</span>
+            <span className="moon-landing__sparkle moon-landing__sparkle--3">✦</span>
+          </div>
         </div>
       </section>
       {(selectedUserStar || isInitialStarHintVisible) && !isMoonLandingVisible && (
