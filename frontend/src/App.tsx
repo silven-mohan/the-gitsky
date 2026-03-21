@@ -14,6 +14,7 @@ const USER_STAR_MIN_SIZE = 8;
 const USER_STAR_MAX_SIZE = 30;
 const ZOOM_ANIMATION_DURATION_MS = 900;
 const MOON_TEXTURE_URL = '/textures/lroc_color_poles_4k.tif';
+const MOON_LANDING_IMAGE_URL = '/textures/moon.jpg';
 const MOON_DISPLACEMENT_URL = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/ldem_3_8bit.jpg';
 
 type UserStar = {
@@ -130,8 +131,8 @@ function App() {
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userSearchFeedback, setUserSearchFeedback] = useState('');
   const [isInitialStarHintVisible, setIsInitialStarHintVisible] = useState(true);
-  const [isMoonDescriptionVisible, setIsMoonDescriptionVisible] = useState(false);
-  const moonDescriptionVisibleRef = useRef(false);
+  const [isMoonLandingVisible, setIsMoonLandingVisible] = useState(false);
+  const moonLandingVisibleRef = useRef(false);
 
   const zoomAnimationRef = useRef<{
     active: boolean;
@@ -597,10 +598,10 @@ function App() {
       }
 
       const moonDistance = camera.position.distanceTo(moon.position);
-      const shouldShowMoonDescription = moonDistance <= MIN_CAMERA_DISTANCE + 0.7;
-      if (shouldShowMoonDescription !== moonDescriptionVisibleRef.current) {
-        moonDescriptionVisibleRef.current = shouldShowMoonDescription;
-        setIsMoonDescriptionVisible(shouldShowMoonDescription);
+      const shouldShowMoonLanding = moonDistance <= MIN_CAMERA_DISTANCE + 0.7;
+      if (shouldShowMoonLanding !== moonLandingVisibleRef.current) {
+        moonLandingVisibleRef.current = shouldShowMoonLanding;
+        setIsMoonLandingVisible(shouldShowMoonLanding);
       }
 
       controls.update();
@@ -683,7 +684,7 @@ function App() {
   return (
     <main className="page">
       <div className="canvas-wrap is-visible" ref={canvasWrapRef} />
-      <section className={`world-card ${!isCardOpen ? 'world-card--hidden' : ''}`}>
+      <section className={`world-card ${!isCardOpen || isMoonLandingVisible ? 'world-card--hidden' : ''}`}>
         <h2>The GitSky</h2>
         <form
           className="world-card__search"
@@ -721,21 +722,17 @@ function App() {
         </div>
       </section>
       <button
-        className={`world-card-toggle ${!isCardOpen ? 'world-card-toggle--visible' : ''}`}
+        className={`world-card-toggle ${!isCardOpen && !isMoonLandingVisible ? 'world-card-toggle--visible' : ''}`}
         type="button"
         aria-label="Open controls card"
         onClick={() => setIsCardOpen(true)}
       >
         ˅
       </button>
-      <section className={`project-description ${isMoonDescriptionVisible ? 'project-description--visible' : ''}`}>
-        <h3>The GitSky</h3>
-        <p>
-          The GitSky turns GitHub users into stars orbiting a living moon. Search and click users to travel through
-          their constellations, compare star counts, and explore the project as an interactive 3D universe.
-        </p>
+      <section className={`moon-landing ${isMoonLandingVisible ? 'moon-landing--visible' : ''}`}>
+        <img src={MOON_LANDING_IMAGE_URL} alt="Moon landing" />
       </section>
-      {(selectedUserStar || isInitialStarHintVisible) && (
+      {(selectedUserStar || isInitialStarHintVisible) && !isMoonLandingVisible && (
         <section className="star-info-panel">
           {selectedUserStar ? (
             <>
