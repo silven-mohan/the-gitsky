@@ -207,6 +207,23 @@ function App() {
     startCameraTransition(destinationPosition, center);
   };
 
+  const adjustMoonZoom = (direction: 'in' | 'out') => {
+    const camera = cameraRef.current;
+    const controls = controlsRef.current;
+
+    if (!camera || !controls) {
+      return;
+    }
+
+    const toCamera = camera.position.clone().sub(controls.target);
+    const currentDistance = toCamera.length();
+    const zoomStep = direction === 'in' ? -1.5 : 1.5;
+    const nextDistance = THREE.MathUtils.clamp(currentDistance + zoomStep, MIN_CAMERA_DISTANCE, MAX_CAMERA_DISTANCE);
+
+    camera.position.copy(controls.target.clone().add(toCamera.normalize().multiplyScalar(nextDistance)));
+    controls.update();
+  };
+
   const handleUserSearch = () => {
     const trimmedQuery = userSearchQuery.trim();
     if (!trimmedQuery) {
@@ -773,7 +790,17 @@ function App() {
       <section className={`moon-landing ${isMoonLandingVisible ? 'moon-landing--visible' : ''}`}>
         <img src={MOON_LANDING_IMAGE_URL} alt="Moon landing" />
         <div className="moon-landing__description">
-          <h3>The GitSky Mission Log 🌌</h3>
+          <div className="moon-landing__topbar">
+            <h3>The GitSky Mission Log 🌌</h3>
+            <div className="moon-landing__zoom-controls" aria-label="Moon zoom controls">
+              <button type="button" onClick={() => adjustMoonZoom('in')} aria-label="Zoom in">
+                +
+              </button>
+              <button type="button" onClick={() => adjustMoonZoom('out')} aria-label="Zoom out">
+                -
+              </button>
+            </div>
+          </div>
 
           <h4>🚀 Description</h4>
           <p>
@@ -826,13 +853,10 @@ function App() {
           </p>
 
           <div className="moon-landing__made-with" aria-label="Made with heart and sparkles">
-            <span>✨ Made with</span>
+            <span>Made with love</span>
             <span className="moon-landing__heart" role="img" aria-label="Grey heart">
               🩶
             </span>
-            <span className="moon-landing__sparkle moon-landing__sparkle--1">✦</span>
-            <span className="moon-landing__sparkle moon-landing__sparkle--2">✧</span>
-            <span className="moon-landing__sparkle moon-landing__sparkle--3">✦</span>
           </div>
         </div>
       </section>

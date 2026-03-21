@@ -243,11 +243,45 @@ body,
   pointer-events: none;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .moon-landing__description::-webkit-scrollbar {
   width: 0;
   height: 0;
+}
+
+.moon-landing--visible .moon-landing__description {
+  pointer-events: auto;
+}
+
+.moon-landing__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.moon-landing__zoom-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.moon-landing__zoom-controls button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgb(176 186 200 / 45%);
+  border-radius: 999px;
+  background: rgb(44 51 62 / 76%);
+  color: #f4f8ff;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.moon-landing__zoom-controls button:hover {
+  background: rgb(60 69 82 / 82%);
 }
 
 .moon-landing__description h3 {
@@ -289,10 +323,10 @@ body,
 
 .moon-landing__made-with {
   margin-top: 1rem;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.45rem;
-  position: relative;
   color: #ffffff;
   font-weight: 800;
 }
@@ -300,31 +334,6 @@ body,
 .moon-landing__heart {
   display: inline-block;
   animation: moon-heart-float 2.4s ease-in-out infinite;
-}
-
-.moon-landing__sparkle {
-  position: absolute;
-  color: #f2f5fb;
-  opacity: 0;
-  animation: moon-sparkle 1.7s linear infinite;
-}
-
-.moon-landing__sparkle--1 {
-  top: -0.6rem;
-  right: -0.4rem;
-  animation-delay: 0s;
-}
-
-.moon-landing__sparkle--2 {
-  top: -0.1rem;
-  right: -1rem;
-  animation-delay: 0.45s;
-}
-
-.moon-landing__sparkle--3 {
-  top: -0.8rem;
-  right: -1.45rem;
-  animation-delay: 0.9s;
 }
 
 @keyframes moon-heart-float {
@@ -336,20 +345,6 @@ body,
   }
   100% {
     transform: translateY(0);
-  }
-}
-
-@keyframes moon-sparkle {
-  0% {
-    transform: translateY(3px) scale(0.7);
-    opacity: 0;
-  }
-  35% {
-    opacity: 0.95;
-  }
-  100% {
-    transform: translateY(-10px) scale(1.05);
-    opacity: 0;
   }
 }
 
