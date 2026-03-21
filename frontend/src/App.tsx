@@ -13,7 +13,7 @@ const MAX_CAMERA_DISTANCE = 260;
 const USER_STAR_MIN_SIZE = 8;
 const USER_STAR_MAX_SIZE = 30;
 const ZOOM_ANIMATION_DURATION_MS = 900;
-const MOON_HINT_DELAY_MS = 2 * 60 * 1000;
+const MOON_HINT_DELAY_MS = 90 * 1000;
 const MOON_TEXTURE_URL = '/textures/lroc_color_poles_4k.tif';
 const MOON_LANDING_IMAGE_URL = '/textures/moon.jpg';
 const MOON_DISPLACEMENT_URL = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/ldem_3_8bit.jpg';
@@ -635,8 +635,8 @@ function App() {
         const hintX = (hintPosition.x * 0.5 + 0.5) * mount.clientWidth;
         const hintY = (-hintPosition.y * 0.5 + 0.5) * mount.clientHeight - 96;
 
-        moonHintRef.current.style.left = `${hintX.toFixed(1)}px`;
-        moonHintRef.current.style.top = `${hintY.toFixed(1)}px`;
+        moonHintRef.current.style.left = `${THREE.MathUtils.clamp(hintX, 24, mount.clientWidth - 24).toFixed(1)}px`;
+        moonHintRef.current.style.top = `${THREE.MathUtils.clamp(hintY, 24, mount.clientHeight - 24).toFixed(1)}px`;
       }
 
       controls.update();
