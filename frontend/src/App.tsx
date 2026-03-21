@@ -207,7 +207,7 @@ function App() {
     startCameraTransition(destinationPosition, center);
   };
 
-  const adjustMoonZoom = (direction: 'in' | 'out') => {
+  const exitMoonLanding = () => {
     const camera = cameraRef.current;
     const controls = controlsRef.current;
 
@@ -215,13 +215,11 @@ function App() {
       return;
     }
 
-    const toCamera = camera.position.clone().sub(controls.target);
-    const currentDistance = toCamera.length();
-    const zoomStep = direction === 'in' ? -1.5 : 1.5;
-    const nextDistance = THREE.MathUtils.clamp(currentDistance + zoomStep, MIN_CAMERA_DISTANCE, MAX_CAMERA_DISTANCE);
+    const center = new THREE.Vector3(0, 0, 0);
+    const direction = camera.position.clone().sub(controls.target).normalize();
+    const destinationPosition = center.clone().add(direction.multiplyScalar(120));
 
-    camera.position.copy(controls.target.clone().add(toCamera.normalize().multiplyScalar(nextDistance)));
-    controls.update();
+    startCameraTransition(destinationPosition, center);
   };
 
   const handleUserSearch = () => {
@@ -791,15 +789,10 @@ function App() {
         <img src={MOON_LANDING_IMAGE_URL} alt="Moon landing" />
         <div className="moon-landing__description">
           <div className="moon-landing__topbar">
+            <button type="button" className="moon-landing__back" onClick={exitMoonLanding} aria-label="Exit description">
+              ←
+            </button>
             <h3>The GitSky Mission Log 🌌</h3>
-            <div className="moon-landing__zoom-controls" aria-label="Moon zoom controls">
-              <button type="button" onClick={() => adjustMoonZoom('in')} aria-label="Zoom in">
-                +
-              </button>
-              <button type="button" onClick={() => adjustMoonZoom('out')} aria-label="Zoom out">
-                -
-              </button>
-            </div>
           </div>
 
           <h4>🚀 Description</h4>
@@ -857,6 +850,9 @@ function App() {
             <span className="moon-landing__heart" role="img" aria-label="Grey heart">
               🩶
             </span>
+            <span className="moon-landing__sparkle moon-landing__sparkle--1">✦</span>
+            <span className="moon-landing__sparkle moon-landing__sparkle--2">✧</span>
+            <span className="moon-landing__sparkle moon-landing__sparkle--3">✦</span>
           </div>
         </div>
       </section>
