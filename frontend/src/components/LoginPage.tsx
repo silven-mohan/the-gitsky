@@ -106,6 +106,15 @@ function LoginPage() {
             By continuing, you authorize The GitSky to read your public GitHub profile and repository metadata needed to
             compute star counts. We do not request write access to your repositories.
           </p>
+          <p className={styles['policy-links']}>
+            <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noreferrer">
+              Privacy Policy
+            </a>
+            <span aria-hidden="true">•</span>
+            <a href="https://docs.github.com/en/site-policy/github-terms/github-terms-of-service" target="_blank" rel="noreferrer">
+              Usage Guidelines
+            </a>
+          </p>
           <ul>
             <li>Only public GitHub data required for app features is processed.</li>
             <li>Authentication is handled through GitHub OAuth and secured with JWT.</li>

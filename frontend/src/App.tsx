@@ -721,9 +721,9 @@ function App() {
       return;
     }
 
-    const isOrbitEnabled = !isCardOpen || isMoonLandingVisible;
+    const isOrbitEnabled = !isCardOpen && !isMoonLandingVisible;
     controls.enabled = isOrbitEnabled;
-    controls.enableZoom = isOrbitEnabled && !isMoonLandingVisible;
+    controls.enableZoom = isOrbitEnabled;
   }, [isCardOpen, isMoonLandingVisible]);
 
   useEffect(() => {
