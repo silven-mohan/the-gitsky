@@ -8,7 +8,7 @@ const STAR_COUNT = 18000;
 const SHOOTING_STAR_BURST_INTERVAL = 5;
 const SHOOTING_STARS_PER_BURST = 4;
 const MAX_ACTIVE_SHOOTING_STARS = 14;
-const MIN_CAMERA_DISTANCE = 8.4;
+const MIN_CAMERA_DISTANCE = 11.2;
 const MAX_CAMERA_DISTANCE = 260;
 const USER_STAR_MIN_SIZE = 8;
 const USER_STAR_MAX_SIZE = 30;
@@ -186,7 +186,7 @@ function App() {
     const viewDirection = new THREE.Vector3();
     camera.getWorldDirection(viewDirection);
 
-    const focusDistance = THREE.MathUtils.clamp(entry.baseSize * 2.2, MIN_CAMERA_DISTANCE + 2, 42);
+    const focusDistance = THREE.MathUtils.clamp(entry.baseSize * 2.2, MIN_CAMERA_DISTANCE + 4, 46);
     const cameraPosition = target.clone().add(viewDirection.multiplyScalar(-focusDistance));
 
     startCameraTransition(cameraPosition, target);
@@ -280,7 +280,7 @@ function App() {
     controls.enabled = false;
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.zoomSpeed = 2.4;
+    controls.zoomSpeed = 1.5;
     controls.rotateSpeed = 0.38;
     controls.minPolarAngle = 0.05;
     controls.maxPolarAngle = Math.PI - 0.05;
@@ -773,9 +773,9 @@ function App() {
       <section className={`moon-landing ${isMoonLandingVisible ? 'moon-landing--visible' : ''}`}>
         <img src={MOON_LANDING_IMAGE_URL} alt="Moon landing" />
         <div className="moon-landing__description">
-          <h3>The GitSky Mission Log</h3>
+          <h3>The GitSky Mission Log 🌌</h3>
 
-          <h4>1. Description</h4>
+          <h4>1. Description 🚀</h4>
           <p>
             The GitSky is an interactive space narrative where GitHub users become stars inside a live 3D universe.
             Instead of treating contribution data like plain numbers in a table, this experience turns developer activity
@@ -790,7 +790,7 @@ function App() {
             itself in a calm, focused frame.
           </p>
 
-          <h4>2. Tech Stack</h4>
+          <h4>2. Tech Stack 🛠️</h4>
           <p>
             Frontend: React + TypeScript + Vite with a Three.js world renderer for the immersive scene.
           </p>
@@ -806,7 +806,7 @@ function App() {
             REST-style endpoints, and JWT-based auth flow for protected API routes.
           </p>
 
-          <h4>3. Additional Details</h4>
+          <h4>3. Additional Details 🛰️</h4>
           <p>
             The experience intentionally balances aesthetics with performance. Star rendering uses particle systems,
             additive blending, and lightweight animation patterns to keep motion rich while preserving responsiveness.
@@ -826,7 +826,7 @@ function App() {
           </p>
 
           <div className="moon-landing__made-with" aria-label="Made with heart and sparkles">
-            <span>4. Made with</span>
+            <span>4. Made with ✨</span>
             <span className="moon-landing__heart" role="img" aria-label="Grey heart">
               🩶
             </span>
