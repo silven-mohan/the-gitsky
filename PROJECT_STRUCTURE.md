@@ -1,18 +1,17 @@
 # Project Structure
 
-This file documents the current layout of the project.
+This file documents the current, cleaned layout of the repository.
 
-## Refactor Summary
+## Runtime Layout
 
-- Three-page app flow:
-    - `/` -> `GalaxyIntro`
-    - `/video` -> `YouTubeIntro`
-    - `/world` -> `App` (Three.js world)
-- Blue Space overlay text/css removed from the Three.js world scene.
-- OrbitControls zoom-in is clamped to prevent over-zooming toward the moon.
-- Repository layout split:
-    - `frontend/` contains the Vite React app.
-    - `backend/` contains the GitHub OAuth and star-polling API service.
+- `frontend/`: Vite + React + TypeScript UI app.
+- `backend/`: Express API for auth and GitHub/star data.
+
+## Route Flow
+
+- `/` -> `GalaxyIntro`
+- `/video` -> `YouTubeIntro`
+- `/world` -> `App` (Three.js world)
 
 ## Tree
 
@@ -21,20 +20,23 @@ the-gitsky/
 |-- LICENSE
 |-- README.md
 |-- PROJECT_STRUCTURE.md
+|-- .gitignore
 |-- frontend/
+|   |-- .env.example
 |   |-- index.html
 |   |-- package.json
 |   |-- package-lock.json
-|   |-- components.json
 |   |-- postcss.config.js
-|   |-- tailwind.config.js
 |   |-- tailwind.config.ts
 |   |-- tsconfig.json
 |   |-- tsconfig.app.json
 |   |-- tsconfig.node.json
 |   |-- vite.config.ts
-|   |-- vite.config.js
-|   |-- vite.config.d.ts
+|   |-- vercel.json
+|   |-- public/
+|   |   `-- textures/
+|   |       |-- lroc_color_poles_4k.tif
+|   |       `-- moon.jpg
 |   `-- src/
 |       |-- App.tsx
 |       |-- main.tsx
@@ -51,18 +53,36 @@ the-gitsky/
 |       `-- types/
 |           `-- three-fallback.d.ts
 `-- backend/
-    |-- package.json
-    |-- package-lock.json
     |-- .env.example
     |-- README.md
-    |-- data/
-    |   |-- latest-stars.json
-    |   `-- star-history.json
-    `-- src/
-        `-- server.js
+    |-- package.json
+    |-- package-lock.json
+    |-- server.js
+    |-- routes/
+    |   |-- api.js
+    |   `-- auth.js
+    |-- middleware/
+    |   `-- authMiddleware.js
+    |-- services/
+    |   |-- githubService.js
+    |   |-- supabaseClient.js
+    |   `-- supabaseService.js
+    `-- data/
+        |-- latest-stars.json
+        `-- star-history.json
 ```
 
-## Notes
+## Generated And Ignored Artifacts
 
-- `frontend/dist/` and `*/node_modules/` are generated directories and are not part of the authored source structure.
-- `*.tsbuildinfo`, `frontend/vite.config.js`, and `frontend/vite.config.d.ts` are generated artifacts created by TypeScript/Vite tooling.
+- `*/node_modules/`
+- `frontend/dist/`
+- `.vite/`
+- `*.tsbuildinfo`
+- `frontend/vite.config.d.ts`
+- `backend/.env` and `frontend/.env`
+
+## Cleanup Notes
+
+- Removed duplicate/generated frontend config outputs (`vite.config.js`, `vite.config.d.ts`, `tailwind.config.js`).
+- Removed stale backend wrapper entry at `backend/src/server.js`.
+- Removed unused scaffold file `frontend/components.json`.

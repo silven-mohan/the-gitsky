@@ -5,6 +5,11 @@ backend/node_modules/
 
 # Build outputs
 frontend/dist/
+.vite/
+
+# TypeScript build info and generated Vite typings
+*.tsbuildinfo
+frontend/vite.config.d.ts
 
 #Environment files
 backend/.env
