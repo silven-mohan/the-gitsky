@@ -224,16 +224,20 @@ body,
 .moon-landing__description {
   position: absolute;
   left: 50%;
-  top: clamp(0.9rem, 2.8vw, 1.7rem);
+  top: 0.6rem;
   transform: translateX(-50%);
-  width: min(860px, calc(100vw - 2rem));
-  max-height: calc(100vh - 2rem);
+  width: calc(100vw - 1.2rem);
+  max-width: 1200px;
+  height: calc(100vh - 1.2rem);
+  max-height: calc(100vh - 1.2rem);
   overflow-y: auto;
   border: 1px solid rgb(165 174 189 / 34%);
   border-radius: 16px;
   padding: 1rem 1.1rem 1.2rem;
   background: linear-gradient(180deg, rgb(43 49 58 / 62%), rgb(20 24 31 / 58%));
   color: #dde3ec;
+  font-family: 'Orbitron', sans-serif;
+  font-optical-sizing: auto;
   backdrop-filter: blur(6px);
   box-shadow: 0 14px 34px rgb(0 0 0 / 38%), 0 0 26px rgb(151 160 176 / 15%);
   pointer-events: none;

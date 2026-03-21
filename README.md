@@ -43,6 +43,7 @@ See the full tree and structure notes in [PROJECT_STRUCTURE.md](PROJECT_STRUCTUR
 
 - Video Credit goes to: NASA's Goddard Space Flight Center/CI Lab
 - Moon texture credit: NASA's Scientific Visualization Studio
+- Font credit: Orbitron by The League of Moveable Type via Google Fonts
 
 ## Notes
 
