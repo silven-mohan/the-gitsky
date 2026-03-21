@@ -849,7 +849,7 @@ function App() {
 
           <div className="moon-landing__divider moon-landing__divider--footer" />
           <div className="moon-landing__made-with" aria-label="Made with heart and sparkles">
-            <span>Made with love</span>
+            <span>Made with</span>
             <span className="moon-landing__heart" role="img" aria-label="Grey heart">
               🩶
             </span>
