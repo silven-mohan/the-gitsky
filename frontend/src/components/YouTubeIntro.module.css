@@ -33,10 +33,85 @@
   height: 115%;
   border: 0;
   transform: translate(-50%, -50%);
+  transition: opacity 360ms ease;
+}
+
+.videoFrameHidden {
+  opacity: 0;
+}
+
+.videoFrameVisible {
+  opacity: 1;
 }
 
 .pointer-events-none {
   pointer-events: none;
+}
+
+.skeletonOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 30% 24%, rgb(30 36 62 / 55%), rgb(8 10 20 / 96%));
+  overflow: hidden;
+}
+
+.skeletonShimmer {
+  position: absolute;
+  inset: -45%;
+  background: linear-gradient(120deg, rgb(255 255 255 / 0%) 28%, rgb(255 255 255 / 10%) 50%, rgb(255 255 255 / 0%) 72%);
+  animation: skeletonSweep 1.7s linear infinite;
+}
+
+.skeletonLines {
+  position: relative;
+  z-index: 1;
+  width: min(480px, 72vw);
+  display: grid;
+  gap: 0.8rem;
+}
+
+.skeletonLineLong,
+.skeletonLineShort {
+  display: block;
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgb(89 103 144 / 52%), rgb(130 154 204 / 62%), rgb(89 103 144 / 52%));
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+
+.skeletonLineLong {
+  width: 100%;
+}
+
+.skeletonLineShort {
+  width: 62%;
+}
+
+@keyframes skeletonSweep {
+  from {
+    transform: translateX(-38%) rotate(6deg);
+  }
+
+  to {
+    transform: translateX(38%) rotate(6deg);
+  }
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    background-position: 100% 50%;
+    opacity: 0.66;
+  }
+
+  50% {
+    background-position: 0% 50%;
+    opacity: 1;
+  }
 }
 
 @media (max-width: 1024px) {
@@ -49,5 +124,9 @@
   .videoFrame {
     width: 140%;
     height: 140%;
+  }
+
+  .skeletonLines {
+    width: min(360px, 82vw);
   }
 }

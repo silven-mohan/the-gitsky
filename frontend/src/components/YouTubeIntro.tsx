@@ -8,7 +8,8 @@ type YouTubeIntroProps = {
 
 function YouTubeIntro({ videoId = 'EBGh_1l_cZs', redirectUrl = '/world' }: YouTubeIntroProps) {
   const [isExiting, setIsExiting] = useState(false);
-  const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [shouldRenderIframe, setShouldRenderIframe] = useState(false);
+  const [isIframeReady, setIsIframeReady] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
 
   const src = useMemo(
@@ -26,8 +27,8 @@ function YouTubeIntro({ videoId = 'EBGh_1l_cZs', redirectUrl = '/world' }: YouTu
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !iframeLoaded) {
-            setIframeLoaded(true);
+          if (entry.isIntersecting && !shouldRenderIframe) {
+            setShouldRenderIframe(true);
             observer.disconnect();
           }
         });
@@ -38,7 +39,7 @@ function YouTubeIntro({ videoId = 'EBGh_1l_cZs', redirectUrl = '/world' }: YouTu
     observer.observe(viewport);
 
     return () => observer.disconnect();
-  }, [iframeLoaded]);
+  }, [shouldRenderIframe]);
 
   useEffect(() => {
     const previousBodyBackground = document.body.style.background;
@@ -65,15 +66,25 @@ function YouTubeIntro({ videoId = 'EBGh_1l_cZs', redirectUrl = '/world' }: YouTu
   return (
     <main className={`${styles.root} ${isExiting ? styles.zoomExit : ''}`}>
       <div className={styles.videoViewport} ref={viewportRef}>
-        {iframeLoaded && (
+        {!isIframeReady && (
+          <div className={styles.skeletonOverlay} aria-hidden="true">
+            <div className={styles.skeletonShimmer} />
+            <div className={styles.skeletonLines}>
+              <span className={styles.skeletonLineLong} />
+              <span className={styles.skeletonLineShort} />
+            </div>
+          </div>
+        )}
+        {shouldRenderIframe && (
           <iframe
-            className={`${styles.videoFrame} ${styles['pointer-events-none']}`}
+            className={`${styles.videoFrame} ${styles['pointer-events-none']} ${isIframeReady ? styles.videoFrameVisible : styles.videoFrameHidden}`}
             src={src}
             title="YouTube Intro"
             allow="autoplay; encrypted-media; picture-in-picture"
             allowFullScreen
             referrerPolicy="strict-origin-when-cross-origin"
             loading="lazy"
+            onLoad={() => setIsIframeReady(true)}
           />
         )}
       </div>
